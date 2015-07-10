@@ -6,15 +6,24 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.hardware.SensorEventListener;
 import android.hardware.usb.UsbManager;
+import android.hardware.usb.UsbDeviceConnection;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
-//import com.hoho.android.usbserial.driver.*;
+import com.hoho.android.usbserial.driver.UsbSerialPort;
+import com.hoho.android.usbserial.driver.UsbSerialDriver;
+import com.hoho.android.usbserial.driver.UsbSerialProber;
+import com.hoho.android.usbserial.util.SerialInputOutputManager;
+import com.hoho.android.usbserial.util.HexDump;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -23,60 +32,57 @@ import java.util.List;
  */
 public class MainActivityFragment extends Fragment implements SensorEventListener {
 
+    private final String LOG_TAG = this.getClass().getSimpleName();
     private SensorManager mSensorManager;
+    //private UsbManager mUsbManager;
+    private SerialInputOutputManager mSerialIoManager;
 
-    public MainActivityFragment() {
-    }
+    private static UsbSerialPort mSerialPort = null;
+    private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+
+    private final SerialInputOutputManager.Listener mSerialIOListener = new SerialInputOutputManager.Listener() {
+        @Override
+        public void onRunError(Exception e) {
+            Log.d(LOG_TAG, "Runner stopped.");
+        }
+
+        @Override
+        public void onNewData(final byte[] data) {
+            final String message = "Read " + data.length + " bytes: \n" + HexDump.dumpHexString(data) + "\n\n";
+            Log.d(LOG_TAG, message);
+        }
+    };
+
+    private final View.OnClickListener mOnClickTestButtonListener = new View.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            try {
+                mSerialPort.write("o".getBytes("UTF-8"),1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    public MainActivityFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_main, container, false);
 
+        seupSensors();
 
-        Activity activity = this.getActivity();
-        mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
+        Button button = (Button)view.findViewById(R.id.test_button);
+        button.setOnClickListener(mOnClickTestButtonListener);
 
-        List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        for(Sensor s: sensors){
-            Log.d(this.toString(), s.getName());
-        }
-        /*
-        UsbManager usbManager = (UsbManager)activity.getSystemService(activity.USB_SERVICE);
-
-        List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
-        if (availableDrivers.isEmpty()) {
-            return;
-        }
-
-        // Open a connection to the first available driver.
-        UsbSerialDriver driver = availableDrivers.get(0);
-        UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
-        if (connection == null) {
-            // You probably need to call UsbManager.requestPermission(driver.getDevice(), ..)
-            return;
-        }
-
-        // Read some data! Most have just one port (port 0).
-        UsbSerialPort port = driver.getPort(0);
-        port.open(connection);
-        try {
-            port.setBaudRate(115200);
-            byte buffer[] = new byte[16];
-            int numBytesRead = port.read(buffer, 1000);
-            Log.d(TAG, "Read " + numBytesRead + " bytes.");
-        } catch (IOException e) {
-            // Deal with error.
-        } finally {
-            port.close();
-        }
-        */
-
-        return inflater.inflate(R.layout.fragment_main, container, false);
+        return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
         if (mSensorManager != null) {
             List<Sensor> accelSensors = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
             if (accelSensors.size() > 0) {
@@ -84,6 +90,61 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
                 mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_FASTEST);
             }
         }
+
+        Log.d(LOG_TAG, "Resumed, port=" + mSerialPort);
+
+        final UsbManager usbManager = (UsbManager)this.getActivity().getSystemService(this.getActivity().USB_SERVICE);
+
+        if (mSerialPort == null) {
+
+            Log.d(LOG_TAG, "setupUsbSerial");
+
+            List<UsbSerialDriver> availableDrivers =
+                    UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
+            if (availableDrivers.isEmpty()) {
+                Log.w(LOG_TAG, "no available drivers.");
+                return;
+            }
+
+            UsbSerialDriver driver = availableDrivers.get(0);
+            UsbDeviceConnection connection = usbManager.openDevice(driver.getDevice());
+            if (connection == null) {
+                Log.w(LOG_TAG, "unable to open the connection.");
+                // You probably need to call UsbManager.requestPermission(driver.getDevice(), ..)
+                return;
+            }
+
+            List<UsbSerialPort> ports = driver.getPorts();
+            for(UsbSerialPort p: ports){
+                Log.d(LOG_TAG, p.toString());
+            }
+            mSerialPort = ports.get(0);
+
+        }
+        Activity activity = this.getActivity();
+
+        UsbDeviceConnection connection = usbManager.openDevice(mSerialPort.getDriver().getDevice());
+        if (connection == null) {
+            Log.d(LOG_TAG, "Opening device failed");
+            return;
+        }
+
+        try {
+            mSerialPort.open(connection);
+            mSerialPort.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error setting up device: " + e.getMessage(), e);
+            Log.d(LOG_TAG, "Error opening device: " + e.getMessage());
+            try {
+                mSerialPort.close();
+            } catch (IOException e2) {
+                // Ignore.
+            }
+            mSerialPort = null;
+            return;
+        }
+        Log.d(LOG_TAG, "Serial device: " + mSerialPort.getClass().getSimpleName());
+        onDeviceStateChange();
     }
 
     @Override
@@ -92,15 +153,112 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(this);
         }
+
+        stopIoManager();
+        if (mSerialPort != null) {
+            try {
+                mSerialPort.close();
+            } catch (IOException e) {
+                // Ignore.
+            }
+            mSerialPort = null;
+        }
+        this.getActivity().finish();
     }
+
+    private void seupSensors() {
+        Activity activity = this.getActivity();
+        mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
+
+        List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        for(Sensor s: sensors){
+            Log.d(LOG_TAG, s.getName());
+        }
+        return;
+    }
+
+    private void onDeviceStateChange() {
+        stopIoManager();
+        startIoManager();
+    }
+
+    private void stopIoManager() {
+        if (mSerialIoManager != null) {
+            Log.i(LOG_TAG, "Stopping io manager ..");
+            mSerialIoManager.stop();
+            mSerialIoManager = null;
+        }
+    }
+
+    private void startIoManager() {
+        if (mSerialPort != null) {
+            Log.i(LOG_TAG, "Starting io manager ..");
+            mSerialIoManager = new SerialInputOutputManager(mSerialPort, mSerialIOListener);
+            mExecutor.submit(mSerialIoManager);
+        }
+    }
+    /*
+    private void setupUsbSerial() {
+        Log.d(LOG_TAG, "setupUsbSerial");
+        Activity activity = this.getActivity();
+        mUsbManager = (UsbManager)activity.getSystemService(activity.USB_SERVICE);
+
+        List<UsbSerialDriver> availableDrivers =
+                UsbSerialProber.getDefaultProber().findAllDrivers(mUsbManager);
+        if (availableDrivers.isEmpty()) {
+            Log.w(LOG_TAG, "no available drivers.");
+            return;
+        }
+
+        UsbSerialDriver driver = availableDrivers.get(0);
+        UsbDeviceConnection connection = mUsbManager.openDevice(driver.getDevice());
+        if (connection == null) {
+            Log.w(LOG_TAG, "unable to open the connection.");
+            // You probably need to call UsbManager.requestPermission(driver.getDevice(), ..)
+            return;
+        }
+
+        // Read some data! Most have just one port (port 0).
+        List<UsbSerialPort> ports = driver.getPorts();
+        for(UsbSerialPort p: ports){
+            Log.d(LOG_TAG, p.toString());
+        }
+        UsbSerialPort port = ports.get(0);
+
+        try {
+            port.open(connection);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+
+            port.setBaudRate(115200);
+            byte buffer[] = new byte[16];
+            int numBytesRead = port.read(buffer, 1000);
+            Log.d(LOG_TAG, "Read " + numBytesRead + " bytes.");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        } finally {
+            port.close();
+        }
+
+    }
+    */
+
+    /*
+     * SensorEventListener
+     */
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.d(this.toString(), "x:"+event.values[0]+" y:"+event.values[1]+" z:"+event.values[2]);
+        //Log.d(this.toString(), "x:"+event.values[0]+" y:"+event.values[1]+" z:"+event.values[2]);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d(this.toString(), "accuracy:" + accuracy);
+        Log.d(LOG_TAG, "accuracy:" + accuracy);
     }
 }

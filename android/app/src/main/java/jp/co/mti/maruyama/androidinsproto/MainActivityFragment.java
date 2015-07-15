@@ -14,6 +14,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
@@ -25,6 +27,7 @@ import java.util.concurrent.Executors;
 
 import java.io.IOException;
 import java.util.List;
+import java.nio.ByteBuffer;
 
 
 /**
@@ -39,6 +42,8 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     private static UsbSerialPort mSerialPort = null;
     private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+    private Switch mSerialSwitch;
+    private TextView mAccelerationValueTextView;
 
     private final SerialInputOutputManager.Listener mSerialIOListener = new SerialInputOutputManager.Listener() {
         @Override
@@ -66,8 +71,10 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
-        Button button = (Button)view.findViewById(R.id.test_button);
+        Button button = (Button)view.findViewById(R.id.serial_test_button);
         button.setOnClickListener(mOnClickTestButtonListener);
+        mSerialSwitch = (Switch)view.findViewById(R.id.serial_switch);
+        mAccelerationValueTextView = (TextView)view.findViewById(R.id.acceleration_value_text);
         return view;
     }
 
@@ -218,9 +225,17 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
+        String s = String.format("x:%.3f y:%.3f z:%.3f", event.values[0], event.values[1], event.values[2]);
+        mAccelerationValueTextView.setText(s);
 
-        String msg = "x:"+event.values[0]+" y:"+event.values[1]+" z:"+event.values[2];
-        writeSerial(msg);
+        if (mSerialSwitch.isChecked()) {
+            ByteBuffer buf = ByteBuffer.allocate(Float.SIZE * 3 / Byte.SIZE);
+            buf.putFloat(event.values[0]);
+            buf.putFloat(event.values[1]);
+            buf.putFloat(event.values[2]);
+            byte[] data = buf.array();
+            writeSerial(data);
+        }
     }
 
     @Override

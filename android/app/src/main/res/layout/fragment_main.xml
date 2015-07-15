@@ -9,7 +9,39 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Serial Test"
-        android:id="@+id/test_button"
+        android:id="@+id/serial_test_button"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Serial"
+        android:id="@+id/serial_switch"
+        android:checked="false"
+        android:layout_below="@+id/serial_test_button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Accel:"
+        android:id="@+id/textView"
+        android:layout_below="@+id/serial_switch"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/acceleration_value_text"
+        android:layout_below="@+id/serial_switch"
+        android:layout_toRightOf="@+id/textView"
+        android:layout_toEndOf="@+id/textView" />
+
 </RelativeLayout>

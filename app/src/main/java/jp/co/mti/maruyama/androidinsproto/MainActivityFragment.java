@@ -33,6 +33,7 @@ import java.util.List;
 public class MainActivityFragment extends Fragment implements SensorEventListener {
 
     private final String LOG_TAG = this.getClass().getSimpleName();
+
     private SensorManager mSensorManager;
     //private UsbManager mUsbManager;
     private SerialInputOutputManager mSerialIoManager;
@@ -48,8 +49,8 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
         @Override
         public void onNewData(final byte[] data) {
-            final String message = "Read " + data.length + " bytes: \n" + HexDump.dumpHexString(data) + "\n\n";
-            Log.d(LOG_TAG, message);
+            final String msg = "Read: " + HexDump.toHexString(data) + "|" + data.toString() + " (" + data.length + "bytes)";
+            Log.i(LOG_TAG, msg);
         }
     };
 
@@ -57,7 +58,8 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         @Override
         public void onClick(View v) {
             try {
-                mSerialPort.write("o".getBytes("UTF-8"),1);
+                String msg = "test";
+                mSerialPort.write(msg.getBytes("UTF-8"), msg.length());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -67,8 +69,8 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     public MainActivityFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
         seupSensors();

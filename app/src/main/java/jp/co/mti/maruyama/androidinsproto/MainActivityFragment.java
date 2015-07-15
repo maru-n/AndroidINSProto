@@ -56,12 +56,8 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     private final View.OnClickListener mOnClickTestButtonListener = new View.OnClickListener(){
         @Override
         public void onClick(View v) {
-            try {
-                String msg = "test";
-                mSerialPort.write(msg.getBytes("UTF-8"), msg.length());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String msg = "test";
+            writeSerial(msg);
         }
     };
 
@@ -80,6 +76,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         super.onResume();
         setupSensor();
         setupSerialIO();
+        Log.d(LOG_TAG, "Resumed, port=" + mSerialPort);
     }
 
     @Override
@@ -121,9 +118,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     }
 
     private void setupSerialIO() {
-
-        Log.d(LOG_TAG, "Resumed, port=" + mSerialPort);
-
         final UsbManager usbManager = (UsbManager)this.getActivity().getSystemService(this.getActivity().USB_SERVICE);
 
         if (mSerialPort == null) {
@@ -198,8 +192,17 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         }
     }
 
-    private void writeSerial() {
+    private void writeSerial(String msg) {
+        byte[] data = msg.getBytes();
+        writeSerial(data);
+    }
 
+    private void writeSerial(byte[] data) {
+        try {
+            mSerialPort.write(data, data.length);
+        } catch (IOException e) {
+            Log.w(LOG_TAG, "Serial IO is not available.");
+        }
     }
 
     /*
@@ -208,11 +211,12 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        //Log.d(this.toString(), "x:"+event.values[0]+" y:"+event.values[1]+" z:"+event.values[2]);
+        String msg = "x:"+event.values[0]+" y:"+event.values[1]+" z:"+event.values[2];
+        writeSerial(msg);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d(LOG_TAG, "accuracy:" + accuracy);
+        Log.i(LOG_TAG, "sensor accuracy: " + accuracy);
     }
 }

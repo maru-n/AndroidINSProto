@@ -35,7 +35,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     private final String LOG_TAG = this.getClass().getSimpleName();
 
     private SensorManager mSensorManager;
-    //private UsbManager mUsbManager;
     private SerialInputOutputManager mSerialIoManager;
 
     private static UsbSerialPort mSerialPort = null;
@@ -49,7 +48,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
         @Override
         public void onNewData(final byte[] data) {
-            final String msg = "Read: " + HexDump.toHexString(data) + "|" + data.toString() + " (" + data.length + "bytes)";
+            final String msg = "Read: " + HexDump.toHexString(data) + "|" + new String(data) + " (" + data.length + "bytes)";
             Log.i(LOG_TAG, msg);
         }
     };
@@ -70,20 +69,47 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_main, container, false);
-
-        seupSensors();
-
         Button button = (Button)view.findViewById(R.id.test_button);
         button.setOnClickListener(mOnClickTestButtonListener);
-
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        setupSensor();
+        setupSerialIO();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(this);
+        }
+
+        stopIoManager();
+        if (mSerialPort != null) {
+            try {
+                mSerialPort.close();
+            } catch (IOException e) {
+                // Ignore.
+            }
+            mSerialPort = null;
+        }
+        this.getActivity().finish();
+    }
+
+    private void setupSensor() {
+        Activity activity = this.getActivity();
+        mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
+
+        List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        Log.d(LOG_TAG, "Sensor list");
+        for(Sensor s: sensors){
+            Log.d(LOG_TAG, s.getName());
+        }
 
         if (mSensorManager != null) {
             List<Sensor> accelSensors = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
@@ -92,6 +118,9 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
                 mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_FASTEST);
             }
         }
+    }
+
+    private void setupSerialIO() {
 
         Log.d(LOG_TAG, "Resumed, port=" + mSerialPort);
 
@@ -123,7 +152,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
             mSerialPort = ports.get(0);
 
         }
-        Activity activity = this.getActivity();
 
         UsbDeviceConnection connection = usbManager.openDevice(mSerialPort.getDriver().getDevice());
         if (connection == null) {
@@ -149,36 +177,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         onDeviceStateChange();
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mSensorManager != null) {
-            mSensorManager.unregisterListener(this);
-        }
-
-        stopIoManager();
-        if (mSerialPort != null) {
-            try {
-                mSerialPort.close();
-            } catch (IOException e) {
-                // Ignore.
-            }
-            mSerialPort = null;
-        }
-        this.getActivity().finish();
-    }
-
-    private void seupSensors() {
-        Activity activity = this.getActivity();
-        mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
-
-        List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        for(Sensor s: sensors){
-            Log.d(LOG_TAG, s.getName());
-        }
-        return;
-    }
-
     private void onDeviceStateChange() {
         stopIoManager();
         startIoManager();
@@ -186,7 +184,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     private void stopIoManager() {
         if (mSerialIoManager != null) {
-            Log.i(LOG_TAG, "Stopping io manager ..");
+            Log.i(LOG_TAG, "Stopping serial io manager ..");
             mSerialIoManager.stop();
             mSerialIoManager = null;
         }
@@ -194,61 +192,15 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     private void startIoManager() {
         if (mSerialPort != null) {
-            Log.i(LOG_TAG, "Starting io manager ..");
+            Log.i(LOG_TAG, "Starting serial io manager ..");
             mSerialIoManager = new SerialInputOutputManager(mSerialPort, mSerialIOListener);
             mExecutor.submit(mSerialIoManager);
         }
     }
-    /*
-    private void setupUsbSerial() {
-        Log.d(LOG_TAG, "setupUsbSerial");
-        Activity activity = this.getActivity();
-        mUsbManager = (UsbManager)activity.getSystemService(activity.USB_SERVICE);
 
-        List<UsbSerialDriver> availableDrivers =
-                UsbSerialProber.getDefaultProber().findAllDrivers(mUsbManager);
-        if (availableDrivers.isEmpty()) {
-            Log.w(LOG_TAG, "no available drivers.");
-            return;
-        }
-
-        UsbSerialDriver driver = availableDrivers.get(0);
-        UsbDeviceConnection connection = mUsbManager.openDevice(driver.getDevice());
-        if (connection == null) {
-            Log.w(LOG_TAG, "unable to open the connection.");
-            // You probably need to call UsbManager.requestPermission(driver.getDevice(), ..)
-            return;
-        }
-
-        // Read some data! Most have just one port (port 0).
-        List<UsbSerialPort> ports = driver.getPorts();
-        for(UsbSerialPort p: ports){
-            Log.d(LOG_TAG, p.toString());
-        }
-        UsbSerialPort port = ports.get(0);
-
-        try {
-            port.open(connection);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        try {
-
-            port.setBaudRate(115200);
-            byte buffer[] = new byte[16];
-            int numBytesRead = port.read(buffer, 1000);
-            Log.d(LOG_TAG, "Read " + numBytesRead + " bytes.");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        } finally {
-            port.close();
-        }
+    private void writeSerial() {
 
     }
-    */
 
     /*
      * SensorEventListener

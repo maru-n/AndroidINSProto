@@ -133,6 +133,9 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
             UsbSerialDriver driver = availableDrivers.get(0);
             UsbDeviceConnection connection = usbManager.openDevice(driver.getDevice());
+            /*
+            ava.lang.SecurityException: User has not given permission to device UsbDevice[mName=/dev/bus/usb/001/002,mVendorId=1027,mProductId=24577,mClass=0,mSubclass=0,mProtocol=0,mInterfaces=[Landroid.hardware.usb.UsbInterface;@42ac38e0]
+            */
             if (connection == null) {
                 Log.w(LOG_TAG, "unable to open the connection.");
                 // You probably need to call UsbManager.requestPermission(driver.getDevice(), ..)
@@ -198,19 +201,24 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     }
 
     private void writeSerial(byte[] data) {
+        if (mSerialPort == null) {
+            Log.w(LOG_TAG, "Serial port is not available.");
+            return;
+        }
         try {
             mSerialPort.write(data, data.length);
         } catch (IOException e) {
-            Log.w(LOG_TAG, "Serial IO is not available.");
+            e.printStackTrace();
         }
     }
+
 
     /*
      * SensorEventListener
      */
-
     @Override
     public void onSensorChanged(SensorEvent event) {
+
         String msg = "x:"+event.values[0]+" y:"+event.values[1]+" z:"+event.values[2];
         writeSerial(msg);
     }

@@ -46,29 +46,30 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     private SensorManager mSensorManager;
     private SerialInputOutputManager mSerialIoManager;
 
-    //private static UsbSerialPort mSerialPort = null;
-    //private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
     private Switch mSerialSwitch;
     private TextView mAccelerationValueTextView;
 
-    private final SerialInputOutputManager.Listener mSerialIOListener = new SerialInputOutputManager.Listener() {
-        @Override
-        public void onRunError(Exception e) {
-            Log.d(TAG, "Runner stopped.");
-        }
+    private PendingIntent mPermissionIntent;
+    private static final String ACTION_USB_PERMISSION = "jp.co.mti.maruyama.androidinsproto.USB_PERMISSION";
 
-        @Override
-        public void onNewData(final byte[] data) {
-            final String msg = "Read: " + HexDump.toHexString(data) + "|" + new String(data) + " (" + data.length + "bytes)";
-            Log.i(TAG, msg);
-        }
-    };
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
 
-    private final View.OnClickListener mOnClickTestButtonListener = new View.OnClickListener(){
-        @Override
-        public void onClick(View v) {
-            String msg = "test";
-            writeSerial(msg);
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (ACTION_USB_PERMISSION.equals(action)) {
+                synchronized (this) {
+                    UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
+                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                        if(device != null){
+                            MainActivityFragment.this.openSerialIO(device);
+                        }
+                    }
+                    else {
+                        Log.d(TAG, "permission denied for device " + device);
+                    }
+                }
+            }
         }
     };
 
@@ -78,10 +79,20 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         Button button = (Button)view.findViewById(R.id.serial_test_button);
-        button.setOnClickListener(mOnClickTestButtonListener);
+        button.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                String msg = "test";
+                writeSerial(msg);
+            }
+        });
         mSerialSwitch = (Switch)view.findViewById(R.id.serial_switch);
         mAccelerationValueTextView = (TextView)view.findViewById(R.id.acceleration_value_text);
 
+        mPermissionIntent = PendingIntent.getBroadcast(this.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+        this.getActivity().registerReceiver(mUsbReceiver, filter);
+        setupUsbSerial();
         return view;
     }
 
@@ -89,7 +100,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     public void onResume() {
         super.onResume();
         setupSensor();
-        setupSerialIO();
     }
 
     @Override
@@ -98,7 +108,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(this);
         }
-        stopSerialIo();
+        closeSerialIo();
     }
 
     private void setupSensor() {
@@ -121,10 +131,10 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         }
     }
 
-    private void setupSerialIO() {
-        stopSerialIo();
+    private void setupUsbSerial() {
+        //stopSerialIo();
 
-        final UsbManager usbManager = (UsbManager)this.getActivity().getSystemService(this.getActivity().USB_SERVICE);
+        final UsbManager usbManager = (UsbManager) this.getActivity().getSystemService(this.getActivity().USB_SERVICE);
 
         List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
         if (availableDrivers.isEmpty()) {
@@ -134,8 +144,16 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         UsbSerialDriver driver = availableDrivers.get(0);
         UsbSerialPort port = driver.getPorts().get(0);
 
+        usbManager.requestPermission(port.getDriver().getDevice(), mPermissionIntent);
+    }
 
-        //usbManager.requestPermission(driver.getDevice(), null);
+    private void openSerialIO(UsbDevice device) {
+
+        UsbSerialDriver driver = UsbSerialProber.getDefaultProber().probeDevice(device);
+        UsbSerialPort port = driver.getPorts().get(0);
+
+        Activity activity = MainActivityFragment.this.getActivity();
+        final UsbManager usbManager = (UsbManager)activity.getSystemService(activity.USB_SERVICE);
         UsbDeviceConnection connection = usbManager.openDevice(port.getDriver().getDevice());
         if (connection == null) {
             Log.d(TAG, "Opening device failed");
@@ -157,12 +175,22 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         }
         Log.d(TAG, "Serial device: " + port.getClass().getSimpleName());
 
-        mSerialIoManager = new SerialInputOutputManager(port, mSerialIOListener);
+        mSerialIoManager = new SerialInputOutputManager(port, new SerialInputOutputManager.Listener() {
+            @Override
+            public void onRunError(Exception e) {
+                Log.d(TAG, "Runner stopped.");
+            }
+            @Override
+            public void onNewData(final byte[] data) {
+                final String msg = "Read: " + HexDump.toHexString(data) + "|" + new String(data) + " (" + data.length + "bytes)";
+                Log.i(TAG, msg);
+            }
+        });
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(mSerialIoManager);
     }
 
-    private void stopSerialIo() {
+    private void closeSerialIo() {
         if (mSerialIoManager != null) {
             Log.i(TAG, "Stopping serial IO.");
             mSerialIoManager.stop();

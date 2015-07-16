@@ -1,27 +1,29 @@
 #!/usr/bin/env python
 
-import serial
-import struct
+from data_receiver import DataReceiver
+from optparse import OptionParser
 import sys
 
-serial_device = sys.argv[1]
-baudrate = 115200
-ser = serial.Serial(serial_device, baudrate, timeout=0.1)
+if __name__ == '__main__':
+    parser = OptionParser()
+    (opts, args) = parser.parse_args()
 
-while True:
-    ser.write([1])
-    data_num = 12*3
-    bytes = ser.read(data_num)
-    if len(bytes) == data_num:
-        ax, ay, az, gx, gy, gz, mx, my, mz = struct.unpack('>fffffffff', bytes)
-        msg = ''
-        msg += 'accel(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (ax, ay, az)
-        msg += 'gyro(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (gx, gy, gz)
-        msg += 'mag(x:% 10.5f y:% 10.5f z:% 10.5f)' % (mx, my, mz)
-    else:
-        msg = "no data available."
-    sys.stdout.write('\r\033[K' + msg)
-    sys.stdout.flush()
+    if len(args) < 1:
+        exit()
 
+    serial_device = args[0]
+    data_receiver = DataReceiver()
+    data_receiver.set_serial_settings(serial_device)
 
-ser.close()
+    while True:
+        try:
+            ax, ay, az, gx, gy, gz, mx, my, mz = data_receiver.fetch_all_data()
+            msg = ''
+            msg += 'accel(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (ax, ay, az)
+            msg += 'gyro(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (gx, gy, gz)
+            msg += 'mag(x:% 10.5f y:% 10.5f z:% 10.5f)' % (mx, my, mz)
+        except Exception as e:
+            msg = "no data available."
+        finally:
+            sys.stdout.write('\r\033[K' + msg)
+            sys.stdout.flush()

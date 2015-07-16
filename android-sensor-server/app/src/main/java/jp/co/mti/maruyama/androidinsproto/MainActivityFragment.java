@@ -263,7 +263,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         buf.putFloat(val[2]);
         byte[] data = buf.array();
         writeSerial(data);
-
     }
 
     private void stopUsbSerialIo() {
@@ -320,11 +319,11 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     private void setSensorDataText() {
         String s;
-        s = String.format("x:%.3f y:%.3f z:%.3f", accelValue[0], accelValue[1], accelValue[2]);
+        s = String.format("x:% 9.5f y:% 9.5f z:% 9.5f", accelValue[0], accelValue[1], accelValue[2]);
         mAccelValueTextView.setText(s);
-        s = String.format("x:%.3f y:%.3f z:%.3f", gyroValue[0], gyroValue[1], gyroValue[2]);
+        s = String.format("x:% 9.5f y:% 9.5f z:% 9.5f", gyroValue[0], gyroValue[1], gyroValue[2]);
         mGyroValueTextView.setText(s);
-        s = String.format("x:%.3f y:%.3f z:%.3f", magValue[0], magValue[1], magValue[2]);
+        s = String.format("x:% 9.3f y:% 9.3f z:% 9.3f", magValue[0], magValue[1], magValue[2]);
         mMagValueTextView.setText(s);
     }
 }

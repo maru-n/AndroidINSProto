@@ -47,10 +47,21 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     private SerialInputOutputManager mSerialIoManager;
 
     private Switch mSerialSwitch;
-    private TextView mAccelerationValueTextView;
+    private TextView mAccelValueTextView;
+    private TextView mGyroValueTextView;
+    private TextView mMagValueTextView;
+
+    private float accelValue[] = new float[3];
+    private float gyroValue[] = new float[3];
+    private float magValue[] = new float[3];
 
     private PendingIntent mPermissionIntent;
     private static final String ACTION_USB_PERMISSION = "jp.co.mti.maruyama.androidinsproto.USB_PERMISSION";
+
+    private static final byte SERIAL_REQUEST_CODE_ALL_SENSOR_DATA = 1;
+    private static final byte SERIAL_REQUEST_CODE_ACCEL_SENSOR_DATA = 2;
+    private static final byte SERIAL_REQUEST_CODE_GYRO_SENSOR_DATA = 3;
+    private static final byte SERIAL_REQUEST_CODE_MAG_SENSOR_DATA = 4;
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
 
@@ -87,7 +98,9 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
             }
         });
         mSerialSwitch = (Switch)view.findViewById(R.id.serial_switch);
-        mAccelerationValueTextView = (TextView)view.findViewById(R.id.acceleration_value_text);
+        mAccelValueTextView = (TextView)view.findViewById(R.id.accel_value_text);
+        mGyroValueTextView = (TextView)view.findViewById(R.id.gyro_value_text);
+        mMagValueTextView = (TextView)view.findViewById(R.id.mag_value_text);
 
         mPermissionIntent = PendingIntent.getBroadcast(this.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -100,6 +113,9 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     public void onResume() {
         super.onResume();
         setupSensor();
+        if (mSerialIoManager == null) {
+            setupUsbSerial();
+        }
     }
 
     @Override
@@ -116,17 +132,31 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
 
         List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-
+        /*
         Log.d(TAG, "Sensor list");
         for(Sensor s: sensors){
             Log.d(TAG, s.getName());
         }
+        */
 
         if (mSensorManager != null) {
             List<Sensor> accelSensors = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
-            if (accelSensors.size() > 0) {
-                Sensor s = accelSensors.get(0);
-                mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_FASTEST);
+            if (accelSensors.size() < 1) {
+                Log.w(TAG, "Accelerometer is not available.");
+            } else {
+                mSensorManager.registerListener(this, accelSensors.get(0), SensorManager.SENSOR_DELAY_FASTEST);
+            }
+            List<Sensor> gyroSensors = mSensorManager.getSensorList(Sensor.TYPE_GYROSCOPE);
+            if (gyroSensors.size() < 1) {
+                Log.w(TAG, "Gyroscope is not available.");
+            } else {
+                mSensorManager.registerListener(this, gyroSensors.get(0), SensorManager.SENSOR_DELAY_FASTEST);
+            }
+            List<Sensor> magSensors = mSensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
+            if (magSensors.size() < 1) {
+                Log.w(TAG, "Magnetic field sensor is not available.");
+            } else {
+                mSensorManager.registerListener(this, magSensors.get(0), SensorManager.SENSOR_DELAY_FASTEST);
             }
         }
     }
@@ -182,12 +212,45 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
             }
             @Override
             public void onNewData(final byte[] data) {
+                Log.d(TAG, "test");
+                for (int i=0; i<data.length; i++) {
+                    switch (data[i]) {
+                        case SERIAL_REQUEST_CODE_ALL_SENSOR_DATA:
+                            sendSensorValue(accelValue);
+                            sendSensorValue(gyroValue);
+                            sendSensorValue(magValue);
+                            break;
+                        case SERIAL_REQUEST_CODE_ACCEL_SENSOR_DATA:
+                            sendSensorValue(accelValue);
+                            break;
+                        case SERIAL_REQUEST_CODE_GYRO_SENSOR_DATA:
+                            sendSensorValue(gyroValue);
+                            break;
+                        case SERIAL_REQUEST_CODE_MAG_SENSOR_DATA:
+                            sendSensorValue(magValue);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                /*
                 final String msg = "Read: " + HexDump.toHexString(data) + "|" + new String(data) + " (" + data.length + "bytes)";
                 Log.i(TAG, msg);
+                */
             }
         });
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(mSerialIoManager);
+    }
+
+    private void sendSensorValue(float[] val) {
+        ByteBuffer buf = ByteBuffer.allocate(Float.SIZE * 3 / Byte.SIZE);
+        buf.putFloat(val[0]);
+        buf.putFloat(val[1]);
+        buf.putFloat(val[2]);
+        byte[] data = buf.array();
+        writeSerial(data);
+
     }
 
     private void closeSerialIo() {
@@ -217,21 +280,38 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
-        String s = String.format("x:%.3f y:%.3f z:%.3f", event.values[0], event.values[1], event.values[2]);
-        mAccelerationValueTextView.setText(s);
-
-        if (mSerialSwitch.isChecked()) {
-            ByteBuffer buf = ByteBuffer.allocate(Float.SIZE * 3 / Byte.SIZE);
-            buf.putFloat(event.values[0]);
-            buf.putFloat(event.values[1]);
-            buf.putFloat(event.values[2]);
-            byte[] data = buf.array();
-            writeSerial(data);
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                for (int i = 0; i < 3; i++) {
+                    accelValue[i] = event.values[i];
+                }
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                for (int i = 0; i < 3; i++) {
+                    gyroValue[i] = event.values[i];
+                }
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                for (int i = 0; i < 3; i++) {
+                    magValue[i] = event.values[i];
+                }
+                break;
         }
+        setSensorDataText();
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         Log.i(TAG, "sensor accuracy: " + accuracy);
+    }
+
+    private void setSensorDataText() {
+        String s;
+        s = String.format("x:%.3f y:%.3f z:%.3f", accelValue[0], accelValue[1], accelValue[2]);
+        mAccelValueTextView.setText(s);
+        s = String.format("x:%.3f y:%.3f z:%.3f", gyroValue[0], gyroValue[1], gyroValue[2]);
+        mGyroValueTextView.setText(s);
+        s = String.format("x:%.3f y:%.3f z:%.3f", magValue[0], magValue[1], magValue[2]);
+        mMagValueTextView.setText(s);
     }
 }

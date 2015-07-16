@@ -121,30 +121,19 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         this.getActivity().registerReceiver(mUsbReceiver, filter);
         setupUsbSerialIO();
+        setupSensor();
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        setupSensor();
-        if (mSerialIoManager == null) {
-            setupUsbSerialIO();
-        }
     }
 
     private void setupSensor() {
 
         Activity activity = this.getActivity();
         mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
-
-        List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        /*
-        Log.d(TAG, "Sensor list");
-        for(Sensor s: sensors){
-            Log.d(TAG, s.getName());
-        }
-        */
 
         if (mSensorManager != null) {
             List<Sensor> accelSensors = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
@@ -175,8 +164,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     }
 
     private void setupUsbSerialIO() {
-        //stopSerialIo();
-
         final UsbManager usbManager = (UsbManager) this.getActivity().getSystemService(this.getActivity().USB_SERVICE);
 
         List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
@@ -194,13 +181,10 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         }
     }
 
-    UsbSerialPort port;
-
     private void openSerialIOPort(UsbDevice device) {
 
         UsbSerialDriver driver = UsbSerialProber.getDefaultProber().probeDevice(device);
-        //UsbSerialPort port = driver.getPorts().get(0);
-        port = driver.getPorts().get(0);
+        UsbSerialPort port = driver.getPorts().get(0);
 
         Activity activity = MainActivityFragment.this.getActivity();
         final UsbManager usbManager = (UsbManager)activity.getSystemService(activity.USB_SERVICE);
@@ -299,12 +283,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
             Log.w(TAG, "Serial IO is not available.");
             return;
         }
-        //mSerialIoManager.writeAsync(data);
-        try {
-            port.write(data, data.length);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mSerialIoManager.writeAsync(data);
     }
 
 

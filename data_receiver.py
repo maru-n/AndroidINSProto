@@ -19,6 +19,7 @@ class DataReceiver(object):
         if len(bytes) == data_num:
             return struct.unpack('>fffffffff', bytes)
         else:
+            self.__serial.flush()
             Exception("No data received.")
 
     def __del__(self):

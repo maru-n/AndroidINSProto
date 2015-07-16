@@ -189,15 +189,18 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         UsbDevice device = port.getDriver().getDevice();
         if (usbManager.hasPermission(device)) {
             openSerialIOPort(device);
-        }else {
+        } else {
             usbManager.requestPermission(port.getDriver().getDevice(), mPermissionIntent);
         }
     }
 
+    UsbSerialPort port;
+
     private void openSerialIOPort(UsbDevice device) {
 
         UsbSerialDriver driver = UsbSerialProber.getDefaultProber().probeDevice(device);
-        UsbSerialPort port = driver.getPorts().get(0);
+        //UsbSerialPort port = driver.getPorts().get(0);
+        port = driver.getPorts().get(0);
 
         Activity activity = MainActivityFragment.this.getActivity();
         final UsbManager usbManager = (UsbManager)activity.getSystemService(activity.USB_SERVICE);
@@ -229,13 +232,10 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
             }
             @Override
             public void onNewData(final byte[] data) {
-                Log.d(TAG, "test");
                 for (int i=0; i<data.length; i++) {
                     switch (data[i]) {
                         case SERIAL_REQUEST_CODE_ALL_SENSOR_DATA:
-                            sendSensorValue(accelValue);
-                            sendSensorValue(gyroValue);
-                            sendSensorValue(magValue);
+                            sendAllSensorValue();
                             break;
                         case SERIAL_REQUEST_CODE_ACCEL_SENSOR_DATA:
                             sendSensorValue(accelValue);
@@ -255,6 +255,22 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(mSerialIoManager);
     }
+
+    private void sendAllSensorValue() {
+        ByteBuffer buf = ByteBuffer.allocate(Float.SIZE * 9 / Byte.SIZE);
+        buf.putFloat(accelValue[0]);
+        buf.putFloat(accelValue[1]);
+        buf.putFloat(accelValue[2]);
+        buf.putFloat(gyroValue[0]);
+        buf.putFloat(gyroValue[1]);
+        buf.putFloat(gyroValue[2]);
+        buf.putFloat(magValue[0]);
+        buf.putFloat(magValue[1]);
+        buf.putFloat(magValue[2]);
+        byte[] data = buf.array();
+        writeSerial(data);
+    }
+
 
     private void sendSensorValue(float[] val) {
         ByteBuffer buf = ByteBuffer.allocate(Float.SIZE * 3 / Byte.SIZE);
@@ -283,7 +299,12 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
             Log.w(TAG, "Serial IO is not available.");
             return;
         }
-        mSerialIoManager.writeAsync(data);
+        //mSerialIoManager.writeAsync(data);
+        try {
+            port.write(data, data.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

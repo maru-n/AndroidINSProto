@@ -46,7 +46,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     private SensorManager mSensorManager;
     private SerialInputOutputManager mSerialIoManager;
 
-    private Switch mSerialSwitch;
     private TextView mAccelValueTextView;
     private TextView mGyroValueTextView;
     private TextView mMagValueTextView;
@@ -97,7 +96,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
                 writeSerial(msg);
             }
         });
-        mSerialSwitch = (Switch)view.findViewById(R.id.serial_switch);
         mAccelValueTextView = (TextView)view.findViewById(R.id.accel_value_text);
         mGyroValueTextView = (TextView)view.findViewById(R.id.gyro_value_text);
         mMagValueTextView = (TextView)view.findViewById(R.id.mag_value_text);

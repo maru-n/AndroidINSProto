@@ -9,7 +9,7 @@ serial_device = sys.argv[1]
 baudrate = 115200
 ser = serial.Serial(serial_device, baudrate, timeout=0.1)
 
-file = open("time.txt", "w")
+file = open(sys.argv[2], "w")
 
 while True:
     ser.write([1])

@@ -20,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -46,6 +47,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
     private SensorManager mSensorManager;
     private SerialInputOutputManager mSerialIoManager;
 
+    private Switch mSensorSerialSwitch;
     private TextView mAccelValueTextView;
     private TextView mGyroValueTextView;
     private TextView mMagValueTextView;
@@ -72,7 +74,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         if(device != null){
-                            MainActivityFragment.this.openSerialIO(device);
+                            MainActivityFragment.this.openSerialIOPort(device);
                         }
                     }
                     else {
@@ -96,6 +98,21 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
                 writeSerial(msg);
             }
         });
+
+        mSensorSerialSwitch = (Switch)view.findViewById(R.id.sensor_serial_switch);
+        mSensorSerialSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    setupSensor();
+                    setupUsbSerialIO();
+                } else {
+                    stopSensor();
+                    stopUsbSerialIo();
+                }
+            }
+        });
+
         mAccelValueTextView = (TextView)view.findViewById(R.id.accel_value_text);
         mGyroValueTextView = (TextView)view.findViewById(R.id.gyro_value_text);
         mMagValueTextView = (TextView)view.findViewById(R.id.mag_value_text);
@@ -103,7 +120,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         mPermissionIntent = PendingIntent.getBroadcast(this.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         this.getActivity().registerReceiver(mUsbReceiver, filter);
-        setupUsbSerial();
+        setupUsbSerialIO();
         return view;
     }
 
@@ -112,20 +129,12 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         super.onResume();
         setupSensor();
         if (mSerialIoManager == null) {
-            setupUsbSerial();
+            setupUsbSerialIO();
         }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mSensorManager != null) {
-            mSensorManager.unregisterListener(this);
-        }
-        closeSerialIo();
     }
 
     private void setupSensor() {
+
         Activity activity = this.getActivity();
         mSensorManager = (SensorManager)activity.getSystemService(Activity.SENSOR_SERVICE);
 
@@ -159,7 +168,13 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         }
     }
 
-    private void setupUsbSerial() {
+    private void stopSensor() {
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(this);
+        }
+    }
+
+    private void setupUsbSerialIO() {
         //stopSerialIo();
 
         final UsbManager usbManager = (UsbManager) this.getActivity().getSystemService(this.getActivity().USB_SERVICE);
@@ -171,11 +186,15 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
         }
         UsbSerialDriver driver = availableDrivers.get(0);
         UsbSerialPort port = driver.getPorts().get(0);
-
-        usbManager.requestPermission(port.getDriver().getDevice(), mPermissionIntent);
+        UsbDevice device = port.getDriver().getDevice();
+        if (usbManager.hasPermission(device)) {
+            openSerialIOPort(device);
+        }else {
+            usbManager.requestPermission(port.getDriver().getDevice(), mPermissionIntent);
+        }
     }
 
-    private void openSerialIO(UsbDevice device) {
+    private void openSerialIOPort(UsbDevice device) {
 
         UsbSerialDriver driver = UsbSerialProber.getDefaultProber().probeDevice(device);
         UsbSerialPort port = driver.getPorts().get(0);
@@ -251,7 +270,7 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
 
     }
 
-    private void closeSerialIo() {
+    private void stopUsbSerialIo() {
         if (mSerialIoManager != null) {
             Log.i(TAG, "Stopping serial IO.");
             mSerialIoManager.stop();

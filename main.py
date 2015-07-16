@@ -43,6 +43,7 @@ def select_serial_device():
             pass
     return devices[di]
 
+
 if __name__ == '__main__':
     parser = OptionParser()
     (opts, args) = parser.parse_args()

@@ -250,10 +250,6 @@ public class MainActivityFragment extends Fragment implements SensorEventListene
                             break;
                     }
                 }
-                /*
-                final String msg = "Read: " + HexDump.toHexString(data) + "|" + new String(data) + " (" + data.length + "bytes)";
-                Log.i(TAG, msg);
-                */
             }
         });
         ExecutorService executor = Executors.newSingleThreadExecutor();

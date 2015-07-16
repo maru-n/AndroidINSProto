@@ -23,7 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Accel:"
+                android:text="Accel "
                 android:id="@+id/textView"
                 android:layout_column="0"
                 android:layout_below="@+id/accel_value_text"
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Gyro:"
+                android:text="Gyro "
                 android:id="@+id/textView6"
                 android:layout_below="@+id/textView"
                 android:layout_alignParentLeft="true"
@@ -71,7 +71,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Mag:"
+                android:text="Mag "
                 android:id="@+id/textView2"
                 android:layout_column="0" />
 

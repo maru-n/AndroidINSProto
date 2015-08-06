@@ -7,12 +7,24 @@
   ws.onopen = function() {
   };
   ws.onmessage = function (evt) {
-    $("#data").text(evt.data);
+    var data = JSON.parse(evt.data)
+    $("#time").text(data.time + " sec");
+    $("#accel").text("x:" + data.accel[0] + "y:" + data.accel[1] + "z:" + data.accel[2]);
+    $("#gyro").text("x:" + data.gyro[0] + "y:" + data.gyro[1] + "z:" + data.gyro[2]);
+    $("#mag").text("x:" + data.mag[0] + "y:" + data.mag[1] + "z:" + data.mag[2]);
   };
   </script>
 </head>
 
 <body>
-  <span id="data"><span>
+  <dl>
+    <dt>Time</dt>
+    <dd id="time"></dd>
+    <dt>Accel</dt>
+    <dd id="accel"></dd>
+    <dt>Gyro</dt>
+    <dd id="gyro"></dd>
+    <dt>Mag</dt>
+    <dd id="mag"></dd>
 </body>
 </html>

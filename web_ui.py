@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -29,23 +30,25 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
         print(message)
 
     def _send_message(self):
+        data = {"time": time.time()}
         try:
             ax, ay, az, gx, gy, gz, mx, my, mz = data_receiver.fetch_all_data()
-            msg = ''
-            msg += 'accel(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (ax, ay, az)
-            msg += 'gyro(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (gx, gy, gz)
-            msg += 'mag(x:% 10.5f y:% 10.5f z:% 10.5f)' % (mx, my, mz)
+            data["accel"] = [ax, ay, az]
+            data["gyro"] = [gx, gy, gz]
+            data["mag"] = [mx, my, mz]
+
         except Exception as e:
-            msg = "no data available."
+            data["msg"] = "no data available."
             print(e)
         finally:
-            self.write_message(msg)
+            self.write_message(data)
 
     def on_close(self):
         self.callback.stop()
         print("WebSocket closed")
 
 define("port", default=8080, help="run on the given port", type=int)
+
 app = tornado.web.Application([
     (r"/", MainHandler),
     (r"/ws", MainWSHandler),

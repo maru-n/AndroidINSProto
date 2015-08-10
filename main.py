@@ -9,14 +9,6 @@ import serial
 import web_ui
 
 
-def select_serial_device(args):
-    if len(args) < 1:
-        serial_device = choice_serial_device()
-    else:
-        serial_device = args[0]
-    return serial_device
-
-
 def choice_serial_device():
     devices = get_available_serial_devices()
     while True:
@@ -71,9 +63,6 @@ def cui_start(data_receiver):
 if __name__ == '__main__':
     parser = OptionParser()
 
-    parser.add_option("-f", "--file", dest="filename",
-                      help="write report to FILE", metavar="FILE")
-
     parser.add_option("-w", "--web-ui",
                       action="store_true", dest="web_ui", default=False,
                       help="use web UI.")
@@ -81,7 +70,11 @@ if __name__ == '__main__':
     (opts, args) = parser.parse_args()
 
     data_receiver = DataReceiver()
-    serial_device = select_serial_device(args)
+
+    if len(args) < 1:
+        serial_device = choice_serial_device()
+    else:
+        serial_device = args[0]
     data_receiver.set_serial_settings(serial_device)
 
     if opts.web_ui:

@@ -2,12 +2,10 @@
 
 import os
 import time
-import traceback
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 from tornado.ioloop import PeriodicCallback
-from tornado.options import define, options, parse_command_line
 
 from data_receiver import DataReceiver
 
@@ -51,8 +49,6 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
         self.callback.stop()
         print("WebSocket closed")
 
-define("port", default=8080, help="run on the given port", type=int)
-
 app = tornado.web.Application([
     (r"/", MainHandler),
     (r"/ws", MainWSHandler)],
@@ -64,6 +60,5 @@ app = tornado.web.Application([
 def start(_data_receiver):
     global data_receiver
     data_receiver = _data_receiver
-    parse_command_line()
-    app.listen(options.port)
+    app.listen(8080)
     tornado.ioloop.IOLoop.instance().start()

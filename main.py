@@ -60,7 +60,8 @@ if __name__ == '__main__':
         serial_device = args[0]
 
     ins = AndroidINS()
-    ins.set_serial_settings(serial_device)
+    ins.setup_serial(serial_device)
+    ins.start()
 
     if opts.web_ui:
         web_ui.start(ins)

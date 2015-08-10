@@ -11,6 +11,20 @@ class INS(object):
     def __init__(self):
         super(INS, self).__init__()
 
+    def __del__(self):
+        self.stop()
+
+    def setup_serial(self, serial_device, baudrate=115200, timeout=0.1):
+        self.serial = serial.Serial(serial_device, baudrate, timeout=timeout)
+
+    @abstractmethod
+    def start(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        pass
+
     @abstractmethod
     def get_quaternion(self):
         pass
@@ -21,33 +35,32 @@ class INS(object):
 
 
 class AndroidINS(INS):
+    def __init__(self):
+        super(AndroidINS, self).__init__()
 
-    def get_quaternion(self):
+    def start(self):
         pass
 
-    def set_serial_settings(self, serial_device, baudrate=115200, timeout=0.1):
-        self.__serial = serial.Serial(serial_device, baudrate, timeout=timeout)
-
-    def fetch_all_data(self):
-        self.__serial.write([1])
-        data_num = 12*3
-        bytes = self.__serial.read(data_num)
-        if len(bytes) == data_num:
-            return struct.unpack('>fffffffff', bytes)
-        else:
-            self.__serial.flush()
-            Exception("No data received.")
-
-    def get_all_sensor_data(self):
-        return self.fetch_all_data()
-
-    def __del__(self):
+    def stop(self):
         try:
-            self.__serial.close()
+            self.serial.close()
         except:
             pass
 
+    def get_all_sensor_data(self):
+        self.serial.write([1])
+        data_num = 12*3
+        bytes = self.serial.read(data_num)
+        if len(bytes) == data_num:
+            return struct.unpack('>fffffffff', bytes)
+        else:
+            self.serial.flush()
+            Exception("No data received.")
+
 
 class VN100INS(object):
+    def __init__(self):
+        super(VN100INS, self).__init__()
+
     def get_quaternion(self):
         pass

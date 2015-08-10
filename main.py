@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import sys
-from data_receiver import DataReceiver
-from optparse import OptionParser
-import glob
+from inertial_navigation_system import AndroidINS
+import web_ui
+import cui
 from sys import platform
 import serial
-import web_ui
+import glob
+from optparse import OptionParser
 
 
 def choice_serial_device():
@@ -45,21 +45,6 @@ def get_available_serial_devices():
     return result
 
 
-def cui_start(data_receiver):
-    while True:
-        try:
-            ax, ay, az, gx, gy, gz, mx, my, mz = data_receiver.fetch_all_data()
-            msg = ''
-            msg += 'accel(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (ax, ay, az)
-            msg += 'gyro(x:% 9.5f y:% 9.5f z:% 9.5f)  ' % (gx, gy, gz)
-            msg += 'mag(x:% 10.5f y:% 10.5f z:% 10.5f)' % (mx, my, mz)
-        except Exception:
-            msg = "no data available."
-        finally:
-            sys.stdout.write('\r\033[K' + msg)
-            sys.stdout.flush()
-
-
 if __name__ == '__main__':
     parser = OptionParser()
 
@@ -69,15 +54,15 @@ if __name__ == '__main__':
 
     (opts, args) = parser.parse_args()
 
-    data_receiver = DataReceiver()
-
     if len(args) < 1:
         serial_device = choice_serial_device()
     else:
         serial_device = args[0]
-    data_receiver.set_serial_settings(serial_device)
+
+    ins = AndroidINS()
+    ins.set_serial_settings(serial_device)
 
     if opts.web_ui:
-        web_ui.start(data_receiver)
+        web_ui.start(ins)
     else:
-        cui_start(data_receiver)
+        cui.start(ins)

@@ -7,10 +7,8 @@ import tornado.web
 import tornado.websocket
 from tornado.ioloop import PeriodicCallback
 
-from data_receiver import DataReceiver
 
-
-data_receiver = None
+ins = None
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -22,7 +20,6 @@ class MainHandler(tornado.web.RequestHandler):
 class MainWSHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
-        self.data_receiver = DataReceiver()
         self.callback = PeriodicCallback(self._send_message, 100)
         self.callback.start()
 
@@ -32,7 +29,7 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
     def _send_message(self):
         data = {"time": time.time()}
         try:
-            ax, ay, az, gx, gy, gz, mx, my, mz = data_receiver.fetch_all_data()
+            ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
             data["result"] = "successed"
             data["accel"] = [ax, ay, az]
             data["gyro"] = [gx, gy, gz]
@@ -57,8 +54,8 @@ app = tornado.web.Application([
 )
 
 
-def start(_data_receiver):
-    global data_receiver
-    data_receiver = _data_receiver
+def start(_ins):
+    global ins
+    ins = _ins
     app.listen(8080)
     tornado.ioloop.IOLoop.instance().start()

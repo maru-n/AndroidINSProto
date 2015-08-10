@@ -1,13 +1,29 @@
 #!/usr/bin/env python
 
+from abc import ABCMeta, abstractmethod
 import serial
 import struct
 
 
-class DataReceiver(object):
-    """docstring for DataReceiver"""
+class INS(object):
+    __metaclass__ = ABCMeta
+
     def __init__(self):
-        super(DataReceiver, self).__init__()
+        super(INS, self).__init__()
+
+    @abstractmethod
+    def get_quaternion(self):
+        pass
+
+    @abstractmethod
+    def get_all_sensor_data(self):
+        pass
+
+
+class AndroidINS(INS):
+
+    def get_quaternion(self):
+        pass
 
     def set_serial_settings(self, serial_device, baudrate=115200, timeout=0.1):
         self.__serial = serial.Serial(serial_device, baudrate, timeout=timeout)
@@ -22,8 +38,16 @@ class DataReceiver(object):
             self.__serial.flush()
             Exception("No data received.")
 
+    def get_all_sensor_data(self):
+        return self.fetch_all_data()
+
     def __del__(self):
         try:
             self.__serial.close()
         except:
             pass
+
+
+class VN100INS(object):
+    def get_quaternion(self):
+        pass

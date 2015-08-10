@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title>INS</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="{{ static_url('amcharts/amcharts.js') }}"></script>
+  <script src="{{ static_url('amcharts/serial.js') }}"></script>
+  <script src="{{ static_url('main.js') }}"></script>
+  <link rel="stylesheet" type="text/css" href="{{ static_url('main.css') }}">
+</head>
+
+<body>
+  <strong><span id="message"></span></strong>
+  <dl>
+    <dt>Time</dt>
+    <dd id="time"></dd>
+    <dt>Accel</dt>
+    <dd id="accel"></dd>
+    <dt>Gyro</dt>
+    <dd id="gyro"></dd>
+    <dt>Mag</dt>
+    <dd id="mag"></dd>
+  </dl>
+  <div id="accel-chart" style="width: 100%; height: 300px;"></div>
+  <div id="gyro-chart" style="width: 100%; height: 300px;"></div>
+  <div id="mag-chart" style="width: 100%; height: 300px;"></div>
+</body>
+</html>

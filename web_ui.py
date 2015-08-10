@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import os
 import time
+import traceback
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -33,13 +35,15 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
         data = {"time": time.time()}
         try:
             ax, ay, az, gx, gy, gz, mx, my, mz = data_receiver.fetch_all_data()
+            data["result"] = "successed"
             data["accel"] = [ax, ay, az]
             data["gyro"] = [gx, gy, gz]
             data["mag"] = [mx, my, mz]
 
-        except Exception as e:
-            data["msg"] = "no data available."
-            print(e)
+        except Exception:
+            data["result"] = "failed"
+            data["message"] = "no data available."
+            # print(traceback.format_exc())
         finally:
             self.write_message(data)
 
@@ -51,8 +55,10 @@ define("port", default=8080, help="run on the given port", type=int)
 
 app = tornado.web.Application([
     (r"/", MainHandler),
-    (r"/ws", MainWSHandler),
-])
+    (r"/ws", MainWSHandler)],
+    template_path=os.path.join(os.getcwd(),  "templates"),
+    static_path=os.path.join(os.getcwd(),  "static"),
+)
 
 
 def start(_data_receiver):

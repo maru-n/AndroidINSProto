@@ -1,7 +1,8 @@
 var ws_url = "ws://" + location.host + "/ws";
-console.log(ws_url);
 var ws = new WebSocket(ws_url);
 var accel_chart;
+var gyro_chart;
+var mag_chart;
 var chartCursor;
 
 
@@ -11,33 +12,57 @@ ws.onmessage = function (evt) {
     var data = JSON.parse(evt.data)
     if (data.result == "successed") {
         $("#time").text(data.time + " sec");
-        //$("#accel").text("x:" + data.accel[0] + "y:" + data.accel[1] + "z:" + data.accel[2]);
-        $("#gyro").text("x:" + data.gyro[0] + "y:" + data.gyro[1] + "z:" + data.gyro[2]);
-        $("#mag").text("x:" + data.mag[0] + "y:" + data.mag[1] + "z:" + data.mag[2]);
         $("#message").text("");
         accel_chart.dataProvider.push({
             'time': data.time,
-            'accel-x': data.accel[0],
-            'accel-y': data.accel[1],
-            'accel-z': data.accel[2]
+            'x': data.accel[0],
+            'y': data.accel[1],
+            'z': data.accel[2]
         });
         accel_chart.validateData();
+        gyro_chart.dataProvider.push({
+            'time': data.time,
+            'x': data.gyro[0],
+            'y': data.gyro[1],
+            'z': data.gyro[2]
+        });
+        gyro_chart.validateData();
+        mag_chart.dataProvider.push({
+            'time': data.time,
+            'x': data.mag[0],
+            'y': data.mag[1],
+            'z': data.mag[2]
+        });
+        mag_chart.validateData();
     }else{
         $("#message").text(data.message);
     }
 };
 
 AmCharts.ready(function () {
-
     accel_chart = new AmCharts.AmSerialChart();
+    accel_chart = make_xyz_chart();
+    accel_chart.write("accel-chart");
 
-    accel_chart.dataProvider = [];
-    accel_chart.categoryField = "time";
-    accel_chart.balloon.bulletSize = 5;
+    gyro_chart = new AmCharts.AmSerialChart();
+    gyro_chart = make_xyz_chart();
+    gyro_chart.write("gyro-chart");
 
+    mag_chart = new AmCharts.AmSerialChart();
+    mag_chart = make_xyz_chart();
+    mag_chart.write("mag-chart");
+});
+
+
+
+function make_xyz_chart() {
+    var chart = new AmCharts.AmSerialChart();
+    chart.dataProvider = [];
+    chart.categoryField = "time";
+    chart.balloon.bulletSize = 5;
 
     var valueAxis = new AmCharts.ValueAxis();
-    accel_chart.addValueAxis(valueAxis);
+    chart.addValueAxis(valueAxis);
 
     for (var i = 0; i < 3; i++) {
         var graph = new AmCharts.AmGraph();
@@ -46,21 +71,19 @@ AmCharts.ready(function () {
         graph.bulletColor = "#FFFFFF";
         graph.useLineColorForBulletBorder = true
         graph.bulletBorderAlpha = 1;
-        accel_chart.addGraph(graph);
+        chart.addGraph(graph);
     }
 
-    accel_chart.graphs[0].valueField = "accel-x";
-    accel_chart.graphs[0].lineColor = "red";
-    accel_chart.graphs[1].valueField = "accel-y";
-    accel_chart.graphs[1].lineColor = "green";
-    accel_chart.graphs[2].valueField = "accel-z";
-    accel_chart.graphs[2].lineColor = "blue";
-    accel_chart.addGraph(graph);
+    chart.graphs[0].valueField = "x";
+    chart.graphs[0].lineColor = "red";
+    chart.graphs[1].valueField = "y";
+    chart.graphs[1].lineColor = "green";
+    chart.graphs[2].valueField = "z";
+    chart.graphs[2].lineColor = "blue";
+    chart.addGraph(graph);
 
-    var chartScrollbar = new AmCharts.ChartScrollbar();
-    accel_chart.addChartScrollbar(chartScrollbar);
+    var chart_scrollbar = new AmCharts.ChartScrollbar();
+    chart.addChartScrollbar(chart_scrollbar);
 
-    accel_chart.write("accel-chart");
-});
-
-
+    return chart;
+}

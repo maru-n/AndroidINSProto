@@ -1,0 +1,3 @@
+[submodule "vnccpplib"]
+	path = vnccpplib
+	url = git@github.com:maru-n/vnccpplib.git

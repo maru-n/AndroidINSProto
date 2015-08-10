@@ -70,11 +70,21 @@ def cui_start(data_receiver):
 
 if __name__ == '__main__':
     parser = OptionParser()
+
+    parser.add_option("-f", "--file", dest="filename",
+                      help="write report to FILE", metavar="FILE")
+
+    parser.add_option("-w", "--web-ui",
+                      action="store_true", dest="web_ui", default=False,
+                      help="use web UI.")
+
     (opts, args) = parser.parse_args()
 
     data_receiver = DataReceiver()
     serial_device = select_serial_device(args)
     data_receiver.set_serial_settings(serial_device)
 
-    web_ui.start(data_receiver)
-    #cui_start(data_receiver)
+    if opts.web_ui:
+        web_ui.start(data_receiver)
+    else:
+        cui_start(data_receiver)

@@ -47,6 +47,9 @@ class AndroidINS(INS):
         except:
             pass
 
+    def get_quaternion(self):
+        return (0., 0., 0., 0.)
+
     def get_all_sensor_data(self):
         self.serial.write([1])
         data_num = 12*3

@@ -32,7 +32,7 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
             ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
             data["result"] = "successed"
             data["accel"] = [ax, ay, az]
-            data["gyro"] = [gx, gy, gz]
+            data["angr"] = [gx, gy, gz]
             data["mag"] = [mx, my, mz]
             x, y, z, w = ins.get_quaternion();
             data["quaternion"] = [x, y, z, w]

@@ -59,9 +59,8 @@ if __name__ == '__main__':
     else:
         serial_device = args[0]
 
-    ins = AndroidINS()
-    #ins = VN100INS()
-    ins.setup_serial(serial_device)
+    #ins = AndroidINS(serial_device)
+    ins = VN100INS(serial_device)
     ins.start()
 
     if opts.web_ui:

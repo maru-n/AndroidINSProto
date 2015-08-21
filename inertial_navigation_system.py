@@ -14,9 +14,6 @@ class INS(object):
     def __del__(self):
         self.stop()
 
-    def setup_serial(self, serial_device, baudrate=115200, timeout=0.1):
-        self.serial = serial.Serial(serial_device, baudrate, timeout=timeout)
-
     @abstractmethod
     def start(self):
         pass
@@ -35,15 +32,20 @@ class INS(object):
 
 
 class AndroidINS(INS):
-    def __init__(self):
+    def __init__(self, serial_device_name, serial_baudrate=115200, serial_timeout=0.1):
         super(AndroidINS, self).__init__()
+        self._serial_device_name = serial_device_name
+        self._serial_baudrate = serial_baudrate
+        self._serial_timeout = serial_timeout
 
     def start(self):
-        pass
+        self.__serial = serial.Serial(self._serial_device_name,
+                                      self._serial_baudrate,
+                                      timeout=self._serial_timeout)
 
     def stop(self):
         try:
-            self.serial.close()
+            self.__serial.close()
         except:
             pass
 
@@ -52,32 +54,64 @@ class AndroidINS(INS):
         return (0., 0., 0., 0.)
 
     def get_all_sensor_data(self):
-        self.serial.write([1])
+        self.__serial.write([1])
         data_num = 12*3
-        bytes = self.serial.read(data_num)
+        bytes = self.__serial.read(data_num)
         if len(bytes) == data_num:
             return struct.unpack('>fffffffff', bytes)
         else:
-            self.serial.flush()
+            self.__serial.flush()
             Exception("No data received.")
 
+from vectornav import *
 
 class VN100INS(INS):
-    def __init__(self):
+    def __init__(self, serial_device_name):
         super(VN100INS, self).__init__()
+        self._serial_device_name = serial_device_name
+        self.__latest_quaternion = (0, 0, 0, 0)
+        self.__latest_acceleration = (0, 0, 0)
+        self.__latest_angular_rate = (0, 0, 0)
+        self.__latest_magnetic = (0, 0, 0)
 
     def start(self):
-        raise Exception('Not implemented!')
-        pass
+        self.vn100 = Vn100()
+        err_code = vn100_connect(self.vn100, self._serial_device_name, 115200)
+        if err_code != VNERR_NO_ERROR:
+            raise Exception('Error code: %d' % err_code)
+        err_code = vn100_setAsynchronousDataOutputType(self.vn100, VNASYNC_OFF, True)
+        if err_code != VNERR_NO_ERROR:
+            raise Exception('Error code: %d' % err_code)
+        err_code = vn100_setBinaryOutput1Configuration(
+            self.vn100,
+            BINARY_ASYNC_MODE_SERIAL_2,
+            8,
+            BG1_QTN|BG1_ACCEL|BG1_ANGULAR_RATE|BG1_MAG_PRES,
+            BG3_NONE,
+            BG5_NONE,
+            True)
+        if err_code != VNERR_NO_ERROR:
+            raise Exception('Error code: %d' % err_code)
+        err_code = vn100_registerAsyncDataReceivedListener(self.vn100, self.__data_listener)
+        if err_code != VNERR_NO_ERROR:
+            raise Exception('Error code: %d' % err_code)
 
     def stop(self):
-        raise Exception('Not implemented!')
-        pass
+        err_code = vn100_unregisterAsyncDataReceivedListener(self.vn100, self.__data_listener);
+        if err_code != VNERR_NO_ERROR:
+            raise Exception('Error code: %d' % err_code)
+        err_code = vn100_disconnect(self.vn100);
+        if err_code != VNERR_NO_ERROR:
+            raise Exception('Error code: %d' % err_code)
 
     def get_quaternion(self):
-        raise Exception('Not implemented!')
-        pass
+        return self.__latest_quaternion
 
     def get_all_sensor_data(self):
-        raise Exception('Not implemented!')
-        pass
+        return self.__latest_acceleration + self.__latest_angular_rate + self.__latest_magnetic
+
+    def __data_listener(self, sender, data):
+        self.__latest_quaternion = (data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w)
+        self.__latest_acceleration = (data.acceleration.c0, data.acceleration.c1, data.acceleration.c2)
+        self.__latest_angular_rate = (data.angularRate.c0, data.angularRate.c1, data.angularRate.c2)
+        self.__latest_magnetic = (data.magnetic.c0, data.magnetic.c1, data.magnetic.c2)

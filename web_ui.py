@@ -2,6 +2,7 @@
 
 import os
 import time
+import json
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -17,16 +18,9 @@ class MainHandler(tornado.web.RequestHandler):
         self.render("index.html")
 
 
-class MainWSHandler(tornado.websocket.WebSocketHandler):
-
-    def open(self):
-        self.callback = PeriodicCallback(self._send_message, 100)
-        self.callback.start()
-
-    def on_message(self, message):
-        print(message)
-
-    def _send_message(self):
+class AllDataHandler(tornado.websocket.WebSocketHandler):
+    @tornado.web.asynchronous
+    def get(self):
         data = {"time": time.time()}
         try:
             ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
@@ -36,21 +30,17 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
             data["magnetic"] = [mx, my, mz]
             x, y, z, w = ins.get_quaternion();
             data["quaternion"] = [x, y, z, w]
-
         except Exception:
             data["result"] = "failed"
             data["message"] = "no data available."
             # print(traceback.format_exc())
-        finally:
-            self.write_message(data)
+        self.write(json.dumps(data, ensure_ascii=False))
+        self.finish()
 
-    def on_close(self):
-        self.callback.stop()
-        print("WebSocket closed")
 
 app = tornado.web.Application([
     (r"/", MainHandler),
-    (r"/ws", MainWSHandler)],
+    (r"/alldata", AllDataHandler)],
     template_path=os.path.join(os.getcwd(),  "templates"),
     static_path=os.path.join(os.getcwd(),  "static"),
 )

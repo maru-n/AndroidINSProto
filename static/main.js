@@ -1,6 +1,4 @@
 // Sensor Data Chart (amcharts.js)
-var ws_url = "ws://" + location.host + "/ws";
-var ws = new WebSocket(ws_url);
 var accel_chart;
 var angr_chart;
 var mag_chart;
@@ -11,46 +9,6 @@ var scene, camera, renderer;
 var cube;
 var renderSizeWidth = window.innerWidth;
 var renderSizeHeight = window.innerHeight;
-
-
-ws.onopen = function() {};
-
-ws.onmessage = function (evt) {
-    var data = JSON.parse(evt.data)
-
-    if (data.result == "successed") {
-        /*
-        $("#time").text(data.time + " sec");
-        $("#message").text("");
-        accel_chart.dataProvider.push({
-            'time': data.time,
-            'x': data.acceleration[0],
-            'y': data.acceleration[1],
-            'z': data.acceleration[2]
-        });
-        accel_chart.validateData();
-        angr_chart.dataProvider.push({
-            'time': data.time,
-            'x': data.acceleration[0],
-            'y': data.acceleration[1],
-            'z': data.acceleration[2]
-        });
-        angr_chart.validateData();
-        mag_chart.dataProvider.push({
-            'time': data.time,
-            'x': data.magnetic[0],
-            'y': data.magnetic[1],
-            'z': data.magnetic[2]
-        });
-        mag_chart.validateData();
-        */
-        var qtn = data.quaternion;
-        cube.quaternion.set(qtn[0], qtn[1], qtn[2], qtn[3]);
-        renderer.render(scene, camera);
-    }else{
-        $("#message").text(data.message);
-    }
-};
 
 AmCharts.ready(function () {
     accel_chart = new AmCharts.AmSerialChart();
@@ -123,6 +81,48 @@ function init_tree() {
     document.body.appendChild( renderer.domElement );
 }
 
+function update() {
+    $.get('/alldata', function(data){
+        var data = JSON.parse(data)
+        if (data.result == "successed") {
+
+
+            $("#time").text(data.time + " sec");
+            $("#message").text("");
+            accel_chart.dataProvider.push({
+                'time': data.time,
+                'x': data.acceleration[0],
+                'y': data.acceleration[1],
+                'z': data.acceleration[2]
+            });
+            accel_chart.validateData();
+            angr_chart.dataProvider.push({
+                'time': data.time,
+                'x': data.angular_rate[0],
+                'y': data.angular_rate[1],
+                'z': data.angular_rate[2]
+            });
+            angr_chart.validateData();
+            mag_chart.dataProvider.push({
+                'time': data.time,
+                'x': data.magnetic[0],
+                'y': data.magnetic[1],
+                'z': data.magnetic[2]
+            });
+            mag_chart.validateData();
+
+            var qtn = data.quaternion;
+            cube.quaternion.set(qtn[0], qtn[1], qtn[2], qtn[3]);
+            renderer.render(scene, camera);
+        }else{
+            $("#message").text(data.message);
+        }
+    });
+
+    setTimeout(update, 50);
+}
+
 $(function(){
     init_tree();
+    update();
 });

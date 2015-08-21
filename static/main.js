@@ -72,7 +72,6 @@ function init_tree() {
 
     scene.add( cube );
 
-    cube.useQuaternion = true;
     cube.quaternion =  new THREE.Quaternion(0,0,0,0);
 
     renderer = new THREE.WebGLRenderer();

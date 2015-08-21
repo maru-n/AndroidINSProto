@@ -24,23 +24,23 @@ ws.onmessage = function (evt) {
         $("#message").text("");
         accel_chart.dataProvider.push({
             'time': data.time,
-            'x': data.accel[0],
-            'y': data.accel[1],
-            'z': data.accel[2]
+            'x': data.acceleration[0],
+            'y': data.acceleration[1],
+            'z': data.acceleration[2]
         });
         accel_chart.validateData();
         angr_chart.dataProvider.push({
             'time': data.time,
-            'x': data.angr[0],
-            'y': data.angr[1],
-            'z': data.angr[2]
+            'x': data.acceleration[0],
+            'y': data.acceleration[1],
+            'z': data.acceleration[2]
         });
         angr_chart.validateData();
         mag_chart.dataProvider.push({
             'time': data.time,
-            'x': data.mag[0],
-            'y': data.mag[1],
-            'z': data.mag[2]
+            'x': data.magnetic[0],
+            'y': data.magnetic[1],
+            'z': data.magnetic[2]
         });
         mag_chart.validateData();
         */

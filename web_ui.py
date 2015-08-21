@@ -34,6 +34,8 @@ class MainWSHandler(tornado.websocket.WebSocketHandler):
             data["accel"] = [ax, ay, az]
             data["gyro"] = [gx, gy, gz]
             data["mag"] = [mx, my, mz]
+            x, y, z, w = ins.get_quaternion();
+            data["quaternion"] = [x, y, z, w]
 
         except Exception:
             data["result"] = "failed"

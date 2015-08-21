@@ -48,6 +48,7 @@ class AndroidINS(INS):
             pass
 
     def get_quaternion(self):
+        # Dummy data!!
         return (0., 0., 0., 0.)
 
     def get_all_sensor_data(self):
@@ -61,9 +62,22 @@ class AndroidINS(INS):
             Exception("No data received.")
 
 
-class VN100INS(object):
+class VN100INS(INS):
     def __init__(self):
         super(VN100INS, self).__init__()
 
+    def start(self):
+        raise Exception('Not implemented!')
+        pass
+
+    def stop(self):
+        raise Exception('Not implemented!')
+        pass
+
     def get_quaternion(self):
+        raise Exception('Not implemented!')
+        pass
+
+    def get_all_sensor_data(self):
+        raise Exception('Not implemented!')
         pass

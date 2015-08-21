@@ -1,3 +1,4 @@
+// Sensor Data Chart (amcharts.js)
 var ws_url = "ws://" + location.host + "/ws";
 var ws = new WebSocket(ws_url);
 var accel_chart;
@@ -5,11 +6,18 @@ var gyro_chart;
 var mag_chart;
 var chartCursor;
 
+// Attitude Display (three.js)
+var scene, camera, renderer;
+var cube;
+var renderSizeWidth = window.innerWidth;
+var renderSizeHeight = window.innerHeight;
+
 
 ws.onopen = function() {};
 
 ws.onmessage = function (evt) {
     var data = JSON.parse(evt.data)
+
     if (data.result == "successed") {
         $("#time").text(data.time + " sec");
         $("#message").text("");
@@ -86,41 +94,30 @@ function make_xyz_chart() {
     return chart;
 }
 
+function init_tree() {
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera( 75, renderSizeWidth/renderSizeHeight, 1, 10000 );
+    camera.position.z = 1000;
+
+    cube = new THREE.Mesh(
+        new THREE.BoxGeometry( 200, 200, 200 ),
+        new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            wireframe: true
+        }));
+
+    scene.add( cube );
+
+    cube.useQuaternion = true;
+    cube.quaternion =  new THREE.Quaternion(0,0,0,0);
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+    document.body.appendChild( renderer.domElement );
+}
+
 $(function(){
-    var scene, camera, renderer;
-    var geometry, material, mesh;
-
-    init();
-    animate();
-
-    function init() {
-
-        scene = new THREE.Scene();
-
-        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
-        camera.position.z = 1000;
-
-        geometry = new THREE.BoxGeometry( 200, 200, 200 );
-        material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
-
-        mesh = new THREE.Mesh( geometry, material );
-        scene.add( mesh );
-
-        renderer = new THREE.WebGLRenderer();
-        renderer.setSize( window.innerWidth, window.innerHeight );
-
-        document.body.appendChild( renderer.domElement );
-
-    }
-
-    function animate() {
-
-        requestAnimationFrame( animate );
-
-        mesh.rotation.x += 0.01;
-        mesh.rotation.y += 0.02;
-
-        renderer.render( scene, camera );
-
-    }
-})
+    init_tree();
+});

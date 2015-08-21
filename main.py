@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from inertial_navigation_system import AndroidINS
+from inertial_navigation_system import *
 import web_ui
 import cui
 from sys import platform
@@ -60,6 +60,7 @@ if __name__ == '__main__':
         serial_device = args[0]
 
     ins = AndroidINS()
+    #ins = VN100INS()
     ins.setup_serial(serial_device)
     ins.start()
 

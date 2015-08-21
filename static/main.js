@@ -2,7 +2,7 @@
 var ws_url = "ws://" + location.host + "/ws";
 var ws = new WebSocket(ws_url);
 var accel_chart;
-var gyro_chart;
+var angr_chart;
 var mag_chart;
 var chartCursor;
 
@@ -19,6 +19,7 @@ ws.onmessage = function (evt) {
     var data = JSON.parse(evt.data)
 
     if (data.result == "successed") {
+        /*
         $("#time").text(data.time + " sec");
         $("#message").text("");
         accel_chart.dataProvider.push({
@@ -28,13 +29,13 @@ ws.onmessage = function (evt) {
             'z': data.accel[2]
         });
         accel_chart.validateData();
-        gyro_chart.dataProvider.push({
+        angr_chart.dataProvider.push({
             'time': data.time,
-            'x': data.gyro[0],
-            'y': data.gyro[1],
-            'z': data.gyro[2]
+            'x': data.angr[0],
+            'y': data.angr[1],
+            'z': data.angr[2]
         });
-        gyro_chart.validateData();
+        angr_chart.validateData();
         mag_chart.dataProvider.push({
             'time': data.time,
             'x': data.mag[0],
@@ -42,6 +43,10 @@ ws.onmessage = function (evt) {
             'z': data.mag[2]
         });
         mag_chart.validateData();
+        */
+        var qtn = data.quaternion;
+        cube.quaternion.set(qtn[0], qtn[1], qtn[2], qtn[3]);
+        renderer.render(scene, camera);
     }else{
         $("#message").text(data.message);
     }
@@ -52,9 +57,9 @@ AmCharts.ready(function () {
     accel_chart = make_xyz_chart();
     accel_chart.write("accel-chart");
 
-    gyro_chart = new AmCharts.AmSerialChart();
-    gyro_chart = make_xyz_chart();
-    gyro_chart.write("gyro-chart");
+    angr_chart = new AmCharts.AmSerialChart();
+    angr_chart = make_xyz_chart();
+    angr_chart.write("angr-chart");
 
     mag_chart = new AmCharts.AmSerialChart();
     mag_chart = make_xyz_chart();

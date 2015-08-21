@@ -19,6 +19,7 @@ ws.onmessage = function (evt) {
     var data = JSON.parse(evt.data)
 
     if (data.result == "successed") {
+        /*
         $("#time").text(data.time + " sec");
         $("#message").text("");
         accel_chart.dataProvider.push({
@@ -42,6 +43,10 @@ ws.onmessage = function (evt) {
             'z': data.mag[2]
         });
         mag_chart.validateData();
+        */
+        var qtn = data.quaternion;
+        cube.quaternion.set(qtn[0], qtn[1], qtn[2], qtn[3]);
+        renderer.render(scene, camera);
     }else{
         $("#message").text(data.message);
     }

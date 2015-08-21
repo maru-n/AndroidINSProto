@@ -62,7 +62,6 @@ if __name__ == '__main__':
     #ins = AndroidINS(serial_device)
     ins = VN100INS(serial_device)
     ins.start()
-
     if opts.web_ui:
         web_ui.start(ins)
     else:

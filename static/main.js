@@ -3,26 +3,27 @@ var accel_chart;
 var angr_chart;
 var mag_chart;
 var chartCursor;
+const MAX_DATAPOINT_NUM = 200
 
 // Attitude Display (three.js)
 var scene, camera, renderer;
 var cube;
-var renderSizeWidth = window.innerWidth;
-var renderSizeHeight = window.innerHeight;
 
-AmCharts.ready(function () {
-    accel_chart = new AmCharts.AmSerialChart();
-    accel_chart = make_xyz_chart();
-    accel_chart.write("accel-chart");
+function init_charts() {
+    AmCharts.ready(function () {
+        accel_chart = new AmCharts.AmSerialChart();
+        accel_chart = make_xyz_chart();
+        accel_chart.write("accel-chart");
 
-    angr_chart = new AmCharts.AmSerialChart();
-    angr_chart = make_xyz_chart();
-    angr_chart.write("angr-chart");
+        angr_chart = new AmCharts.AmSerialChart();
+        angr_chart = make_xyz_chart();
+        angr_chart.write("angr-chart");
 
-    mag_chart = new AmCharts.AmSerialChart();
-    mag_chart = make_xyz_chart();
-    mag_chart.write("mag-chart");
-});
+        mag_chart = new AmCharts.AmSerialChart();
+        mag_chart = make_xyz_chart();
+        mag_chart.write("mag-chart");
+    });
+}
 
 function make_xyz_chart() {
     var chart = new AmCharts.AmSerialChart();
@@ -35,7 +36,7 @@ function make_xyz_chart() {
 
     for (var i = 0; i < 3; i++) {
         var graph = new AmCharts.AmGraph();
-        graph.hideBulletsCount = 50;
+        graph.hideBulletsCount = 20;
         graph.bullet = "round";
         graph.bulletColor = "#FFFFFF";
         graph.useLineColorForBulletBorder = true
@@ -50,21 +51,23 @@ function make_xyz_chart() {
     chart.graphs[2].valueField = "z";
     chart.graphs[2].lineColor = "blue";
     chart.addGraph(graph);
-
+    /*
     var chart_scrollbar = new AmCharts.ChartScrollbar();
     chart.addChartScrollbar(chart_scrollbar);
-
+    */
     return chart;
 }
 
-function init_tree() {
+function init_threejs() {
+    var target_obj = $("#attitude-data-area");
+    var renderSize = target_obj.width()*0.8;
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera( 75, renderSizeWidth/renderSizeHeight, 1, 10000 );
+    camera = new THREE.PerspectiveCamera( 75, 1, 1, 10000 );
     camera.position.z = 1000;
 
     cube = new THREE.Mesh(
-        new THREE.BoxGeometry( 200, 200, 200 ),
+        new THREE.BoxGeometry( 600, 600, 300 ),
         new THREE.MeshBasicMaterial({
             color: 0xff0000,
             wireframe: true
@@ -75,9 +78,9 @@ function init_tree() {
     cube.quaternion =  new THREE.Quaternion(0,0,0,0);
 
     renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( renderSize, renderSize );
 
-    document.body.appendChild( renderer.domElement );
+    target_obj.append(renderer.domElement);
 }
 
 function update() {
@@ -85,29 +88,40 @@ function update() {
         var data = JSON.parse(data)
         if (data.result == "successed") {
 
-
-            $("#time").text(data.time + " sec");
+            $("#time").text(data.time.toFixed(2) + " sec");
             $("#message").text("");
+
             accel_chart.dataProvider.push({
                 'time': data.time,
                 'x': data.acceleration[0],
                 'y': data.acceleration[1],
                 'z': data.acceleration[2]
             });
+            if (accel_chart.dataProvider.length > MAX_DATAPOINT_NUM) {
+                accel_chart.dataProvider.shift();
+            }
             accel_chart.validateData();
+
             angr_chart.dataProvider.push({
                 'time': data.time,
                 'x': data.angular_rate[0],
                 'y': data.angular_rate[1],
                 'z': data.angular_rate[2]
             });
+            if (angr_chart.dataProvider.length > MAX_DATAPOINT_NUM) {
+                angr_chart.dataProvider.shift();
+            }
             angr_chart.validateData();
+
             mag_chart.dataProvider.push({
                 'time': data.time,
                 'x': data.magnetic[0],
                 'y': data.magnetic[1],
                 'z': data.magnetic[2]
             });
+            if (mag_chart.dataProvider.length > MAX_DATAPOINT_NUM) {
+                mag_chart.dataProvider.shift();
+            }
             mag_chart.validateData();
 
             var qtn = data.quaternion;
@@ -116,12 +130,12 @@ function update() {
         }else{
             $("#message").text(data.message);
         }
+        setTimeout(update, 0);
     });
-
-    setTimeout(update, 50);
 }
 
 $(function(){
-    init_tree();
+    init_threejs();
+    init_charts();
     update();
 });

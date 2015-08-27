@@ -3,6 +3,7 @@
 from abc import ABCMeta, abstractmethod
 import serial
 import struct
+import time
 
 
 class INS(object):
@@ -20,6 +21,10 @@ class INS(object):
 
     @abstractmethod
     def stop(self):
+        pass
+
+    @abstractmethod
+    def get_time(self):
         pass
 
     @abstractmethod
@@ -57,6 +62,9 @@ class AndroidINS(INS):
         except:
             pass
 
+    def get_time(self):
+        return time.time()
+
     def get_quaternion(self):
         # Dummy data!!
         return (0., 0., 0., 0.)
@@ -86,6 +94,7 @@ class VN100INS(INS):
     def __init__(self, serial_device_name):
         super(VN100INS, self).__init__()
         self._serial_device_name = serial_device_name
+        self.__time = 0.
         self.__qternion = [0., 0., 0., 0.]
         self.__acceleration = [0., 0., 0.]
         self.__angular_rate = [0., 0., 0.]
@@ -123,6 +132,9 @@ class VN100INS(INS):
         if err_code != VNERR_NO_ERROR:
             raise Exception('Error code: %d' % err_code)
 
+    def get_time(self):
+        return self.__time
+
     def get_quaternion(self):
         return self.__quaternion
 
@@ -136,6 +148,7 @@ class VN100INS(INS):
         return self.__pos
 
     def __data_listener(self, sender, data):
+        self.__time = data.timeStartup * 1e-9
         self.__quaternion = (data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w)
         self.__acceleration = (data.acceleration.c0, data.acceleration.c1, data.acceleration.c2)
         self.__angular_rate = (data.angularRate.c0, data.angularRate.c1, data.angularRate.c2)

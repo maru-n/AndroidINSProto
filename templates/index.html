@@ -10,11 +10,27 @@
 </head>
 
 <body>
+
+  <h1>INS</h1>
+
   <strong><span id="message"></span></strong>
-  <span>Time: </span><span id="time"></span>
-  <div id="accel-chart" style="width: 100%; height: 300px;"></div>
-  <div id="gyro-chart" style="width: 100%; height: 300px;"></div>
-  <div id="mag-chart" style="width: 100%; height: 300px;"></div>
-  <div id="attitude-display"></div>
+
+  <div id="common-data-area">
+    <span>Time: </span><span id="time"></span>
+  </div>
+
+  <div id="sensor-data-area">
+    <div class="figure-title">Acceleration</div>
+    <div id="accel-chart" class="sensor-data-chart"></div>
+    <div class="figure-title">Angular rate</div>
+    <div id="angr-chart" class="sensor-data-chart"></div>
+    <div class="figure-title">Magnetic</div>
+    <div id="mag-chart" class="sensor-data-chart"></div>
+  </div>
+
+  <div id="attitude-data-area">
+    <div class="figure-title">Attitude</div>
+  </div>
+
 </body>
 </html>

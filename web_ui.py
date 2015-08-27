@@ -11,7 +11,6 @@ from tornado.ioloop import PeriodicCallback
 
 ins = None
 
-
 class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
@@ -21,8 +20,9 @@ class MainHandler(tornado.web.RequestHandler):
 class AllDataHandler(tornado.websocket.WebSocketHandler):
     @tornado.web.asynchronous
     def get(self):
-        data = {"time": time.time()}
+        data = {}
         try:
+            data["time"] = ins.get_time()
             ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
             data["result"] = "successed"
             data["acceleration"] = [ax, ay, az]

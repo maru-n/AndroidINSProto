@@ -11,15 +11,12 @@ var cube;
 
 function init_charts() {
     AmCharts.ready(function () {
-        accel_chart = new AmCharts.AmSerialChart();
         accel_chart = make_xyz_chart();
         accel_chart.write("accel-chart");
 
-        angr_chart = new AmCharts.AmSerialChart();
         angr_chart = make_xyz_chart();
         angr_chart.write("angr-chart");
 
-        mag_chart = new AmCharts.AmSerialChart();
         mag_chart = make_xyz_chart();
         mag_chart.write("mag-chart");
     });

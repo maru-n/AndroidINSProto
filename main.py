@@ -51,6 +51,9 @@ if __name__ == '__main__':
     parser.add_option("-w", "--web-ui",
                       action="store_true", dest="web_ui", default=False,
                       help="use web UI.")
+    parser.add_option("-d", "--device", dest="device", type='choice',
+                      choices=['vn100', 'android'], default='vn100',
+                      help="sensor device (vn100|android)")
 
     (opts, args) = parser.parse_args()
 
@@ -59,8 +62,13 @@ if __name__ == '__main__':
     else:
         serial_device = args[0]
 
-    #ins = AndroidINS(serial_device)
-    ins = VN100INS(serial_device)
+    if opts.device == 'vn100':
+        ins = VN100INS(serial_device)
+    elif opts.device == 'android':
+        ins = AndroidINS(serial_device)
+    else:
+        exit()
+
     ins.start()
     if opts.web_ui:
         web_ui.start(ins)

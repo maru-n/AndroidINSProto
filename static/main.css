@@ -21,6 +21,10 @@
     //margin: 0 auto;
 }
 
+#position-data-area {
+    width: 100%;
+}
+
 .figure-title {
     font-size: x-large;
 }

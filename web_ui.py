@@ -7,6 +7,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 from tornado.ioloop import PeriodicCallback
+import traceback
 
 
 ins = None
@@ -22,18 +23,25 @@ class AllDataHandler(tornado.websocket.WebSocketHandler):
     def get(self):
         data = {}
         try:
-            data["time"] = ins.get_time()
+            t = ins.get_time()
             ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
+            qx, qy, qz, qw = ins.get_quaternion()
+            vx, vy, vz = ins.get_velocity()
+            rx, ry, rz = ins.get_position()
+
+            data["time"] = ins.get_time()
             data["result"] = "successed"
             data["acceleration"] = [ax, ay, az]
             data["angular_rate"] = [gx, gy, gz]
             data["magnetic"] = [mx, my, mz]
-            x, y, z, w = ins.get_quaternion();
-            data["quaternion"] = [x, y, z, w]
+            data["quaternion"] = [qx, qy, qz, qw]
+            data["velocity"] = [vx, vy, vz]
+            data["position"] = [rx, ry, rz]
         except Exception:
             data["result"] = "failed"
             data["message"] = "no data available."
-            # print(traceback.format_exc())
+            print(traceback.format_exc())
+
         self.write(json.dumps(data, ensure_ascii=False))
         self.finish()
 

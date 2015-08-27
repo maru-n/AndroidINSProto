@@ -127,6 +127,13 @@ function update() {
             var qtn = data.quaternion;
             cube.quaternion.set(qtn[0], qtn[1], qtn[2], qtn[3]);
             renderer.render(scene, camera);
+
+            var vel = data.velocity;
+            var pos = data.position;
+            $("#position-data-area").empty()
+            $("#position-data-area").append("<p>vx:"+vel[0]+"vy:"+vel[1]+"vz:"+vel[2]+"</p>");
+            $("#position-data-area").append("<p>rx:"+pos[0]+"ry:"+pos[1]+"rz:"+pos[2]+"</p>");
+
         }else{
             $("#message").text(data.message);
         }

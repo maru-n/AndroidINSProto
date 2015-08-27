@@ -30,6 +30,14 @@ class INS(object):
     def get_all_sensor_data(self):
         pass
 
+    @abstractmethod
+    def get_velocity(self):
+        pass
+
+    @abstractmethod
+    def get_position(self):
+        pass
+
 
 class AndroidINS(INS):
     def __init__(self, serial_device_name, serial_baudrate=115200, serial_timeout=0.1):
@@ -63,16 +71,27 @@ class AndroidINS(INS):
             self.__serial.flush()
             Exception("No data received.")
 
+    def get_velocity(self):
+        # Dummpy data!!
+        return (0., 0., 0.)
+
+    def get_position(self):
+        # Dummpy data!!
+        return (0., 0., 0.)
+
+
 from vectornav import *
 
 class VN100INS(INS):
     def __init__(self, serial_device_name):
         super(VN100INS, self).__init__()
         self._serial_device_name = serial_device_name
-        self.__latest_quaternion = (0, 0, 0, 0)
-        self.__latest_acceleration = (0, 0, 0)
-        self.__latest_angular_rate = (0, 0, 0)
-        self.__latest_magnetic = (0, 0, 0)
+        self.__qternion = [0., 0., 0., 0.]
+        self.__acceleration = [0., 0., 0.]
+        self.__angular_rate = [0., 0., 0.]
+        self.__magnetic = [0., 0., 0.]
+        self.__vel = [0., 0., 0.]
+        self.__pos = [0., 0., 0.]
 
     def start(self):
         self.vn100 = Vn100()
@@ -86,9 +105,9 @@ class VN100INS(INS):
             self.vn100,
             BINARY_ASYNC_MODE_SERIAL_2,
             8,
-            BG1_QTN|BG1_ACCEL|BG1_ANGULAR_RATE|BG1_MAG_PRES,
-            BG3_NONE,
-            BG5_NONE,
+            BG1_TIME_STARTUP|BG1_QTN|BG1_DELTA_THETA,
+            BG3_ACCEL|BG3_GYRO|BG3_MAG,
+            BG5_LINEAR_ACCEL_NED,
             True)
         if err_code != VNERR_NO_ERROR:
             raise Exception('Error code: %d' % err_code)
@@ -105,13 +124,28 @@ class VN100INS(INS):
             raise Exception('Error code: %d' % err_code)
 
     def get_quaternion(self):
-        return self.__latest_quaternion
+        return self.__quaternion
 
     def get_all_sensor_data(self):
-        return self.__latest_acceleration + self.__latest_angular_rate + self.__latest_magnetic
+        return self.__acceleration + self.__angular_rate + self.__magnetic
+
+    def get_velocity(self):
+        return self.__vel
+
+    def get_position(self):
+        return self.__pos
 
     def __data_listener(self, sender, data):
-        self.__latest_quaternion = (data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w)
-        self.__latest_acceleration = (data.acceleration.c0, data.acceleration.c1, data.acceleration.c2)
-        self.__latest_angular_rate = (data.angularRate.c0, data.angularRate.c1, data.angularRate.c2)
-        self.__latest_magnetic = (data.magnetic.c0, data.magnetic.c1, data.magnetic.c2)
+        self.__quaternion = (data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w)
+        self.__acceleration = (data.acceleration.c0, data.acceleration.c1, data.acceleration.c2)
+        self.__angular_rate = (data.angularRate.c0, data.angularRate.c1, data.angularRate.c2)
+        self.__magnetic = (data.magnetic.c0, data.magnetic.c1, data.magnetic.c2)
+
+        dt = data.deltaTime
+        self.__vel[0] += data.deltaVelocity.c0
+        self.__vel[1] += data.deltaVelocity.c1
+        self.__vel[2] += data.deltaVelocity.c2
+        self.__pos[0] += self.__vel[0] * dt
+        self.__pos[1] += self.__vel[1] * dt
+        self.__pos[2] += self.__vel[2] * dt
+

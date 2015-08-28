@@ -22,17 +22,11 @@ function init_sensor_data_charts() {
     accel_data.addColumn('number', 'y');
     accel_data.addColumn('number', 'z');
 
-    accel_chart = new google.visualization.LineChart(document.getElementById('accel-chart'));
-    accel_chart.draw(accel_data, xyz_chart_option);
-
     angr_data = new google.visualization.DataTable();
     angr_data.addColumn('number', 'time');
     angr_data.addColumn('number', 'x');
     angr_data.addColumn('number', 'y');
     angr_data.addColumn('number', 'z');
-
-    angr_chart = new google.visualization.LineChart(document.getElementById('angr-chart'));
-    angr_chart.draw(angr_data, xyz_chart_option);
 
     mag_data = new google.visualization.DataTable();
     mag_data.addColumn('number', 'time');
@@ -40,8 +34,9 @@ function init_sensor_data_charts() {
     mag_data.addColumn('number', 'y');
     mag_data.addColumn('number', 'z');
 
+    accel_chart = new google.visualization.LineChart(document.getElementById('accel-chart'));
+    angr_chart = new google.visualization.LineChart(document.getElementById('angr-chart'));
     mag_chart = new google.visualization.LineChart(document.getElementById('mag-chart'));
-    mag_chart.draw(mag_data, xyz_chart_option);
 }
 
 
@@ -84,7 +79,6 @@ function update() {
             $("#message").text("");
 
             accel_data.addRow([data.time, data.acceleration[0], data.acceleration[1], data.acceleration[2]]);
-            console.log(accel_data.getNumberOfRows())
             if (accel_data.getNumberOfRows() > MAX_DATAPOINT_NUM) {
                 accel_data.removeRow(0);
             }

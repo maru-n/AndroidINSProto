@@ -1,13 +1,13 @@
 // Sensor Data Chart (amcharts.js)
-var accel_chart;
-var angr_chart;
-var mag_chart;
-var chartCursor;
-const MAX_DATAPOINT_NUM = 200
+var accel_chart, angr_chart, mag_chart;
+const MAX_DATAPOINT_NUM = 100
 
 // Attitude Display (three.js)
 var scene, camera, renderer;
 var cube;
+
+// Data
+var time = 0.0;
 
 function init_charts() {
     AmCharts.ready(function () {
@@ -26,18 +26,12 @@ function make_xyz_chart() {
     var chart = new AmCharts.AmSerialChart();
     chart.dataProvider = [];
     chart.categoryField = "time";
-    chart.balloon.bulletSize = 5;
 
     var valueAxis = new AmCharts.ValueAxis();
     chart.addValueAxis(valueAxis);
 
     for (var i = 0; i < 3; i++) {
         var graph = new AmCharts.AmGraph();
-        graph.hideBulletsCount = 20;
-        graph.bullet = "round";
-        graph.bulletColor = "#FFFFFF";
-        graph.useLineColorForBulletBorder = true
-        graph.bulletBorderAlpha = 1;
         chart.addGraph(graph);
     }
 
@@ -85,7 +79,11 @@ function update() {
         var data = JSON.parse(data)
         if (data.result == "successed") {
 
-            $("#time").text(data.time.toFixed(2) + " sec");
+            var newTime = data.time;
+            $("#time").text(newTime.toFixed(2));
+            var fps = 1.0 / (newTime - time);
+            $("#fps").text(fps.toFixed(1));
+            time = newTime;
             $("#message").text("");
 
             accel_chart.dataProvider.push({

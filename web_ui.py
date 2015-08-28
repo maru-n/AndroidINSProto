@@ -55,7 +55,9 @@ app = tornado.web.Application([
 
 
 def start(_ins):
+    port = 8080
     global ins
     ins = _ins
-    app.listen(8080)
+    app.listen(port)
+    print('Start web server on port %d' % port)
     tornado.ioloop.IOLoop.instance().start()

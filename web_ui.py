@@ -40,7 +40,6 @@ class AllDataHandler(tornado.websocket.WebSocketHandler):
         except Exception:
             data["result"] = "failed"
             data["message"] = "no data available."
-            print(traceback.format_exc())
 
         self.write(json.dumps(data, ensure_ascii=False))
         self.finish()

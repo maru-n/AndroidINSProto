@@ -52,12 +52,11 @@ function update_sensor_data_charts(data) {
 }
 
 
-var scene, camera, renderer;
-var cube;
+var renderer, scene, camera, cube;
 
 function init_attitude_display(element_id) {
-    var target_obj = $('#'+element_id);
-    var renderSize = target_obj.width()*0.8;
+    var $target = $('#'+element_id);
+    var renderSize = $target.width();
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera( 75, 1, 1, 10000 );
@@ -76,8 +75,9 @@ function init_attitude_display(element_id) {
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( renderSize, renderSize );
+    renderer.setClearColor( 0xffffff );
 
-    target_obj.append(renderer.domElement);
+    $target.append(renderer.domElement);
 }
 
 function update_attitude_display(data) {
@@ -86,9 +86,59 @@ function update_attitude_display(data) {
     renderer.render(scene, camera);
 }
 
-
+var renderer_p, scene_p, camera_p;
 function init_position_display(element_id) {
+    var $target = $('#'+element_id);
+    var target_width = $target.width();
+    var width = target_width;
+    var height = 500;
+    scene_p = new THREE.Scene();
 
+    var material = new THREE.LineBasicMaterial({
+        color: 0x333333
+    });
+    const GRID_RANGE = 20;
+    const GRID_TICK = 1;
+    for (var i = -GRID_RANGE; i<=GRID_RANGE; i+=GRID_TICK){
+        for (var j = -GRID_RANGE; j<=GRID_RANGE; j+=GRID_TICK){
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(
+                new THREE.Vector3( i+GRID_TICK, j, 0 ),
+                new THREE.Vector3( i, j, 0 ),
+                new THREE.Vector3( i, j+GRID_TICK, 0 )
+                );
+            var line = new THREE.Line( geometry, material );
+            scene_p.add(line);
+        }
+    }
+
+    camera_p = new THREE.PerspectiveCamera( 45, width/height, 1, 10000 );
+    camera_p.position.z = 10;
+
+    renderer_p = new THREE.WebGLRenderer();
+    renderer_p.setSize( width, height );
+    renderer_p.setClearColor( 0xffffff );
+
+    $target.append(renderer_p.domElement);
+}
+
+function update_position_display(data) {
+    var pos = data.position;
+    var x = pos[0];
+    var y = pos[1];
+    var radius = 0.05;
+    var segments = 8;
+
+    var material = new THREE.MeshBasicMaterial({
+        color: 0x000099
+    });
+    var circleGeometry = new THREE.CircleGeometry( radius, segments );
+    var circle = new THREE.Mesh( circleGeometry, material );
+    circle.position.x = x;
+    circle.position.y = y;
+    //circle.position.z = pos[2];
+    scene_p.add(circle);
+    renderer_p.render(scene_p, camera_p);
 }
 
 
@@ -100,6 +150,7 @@ function update() {
         if (data.result == "successed") {
             update_sensor_data_charts(data);
             update_attitude_display(data);
+            update_position_display(data);
 
             var newTime = data.time;
             $("#time").text(newTime.toFixed(2));
@@ -107,13 +158,6 @@ function update() {
             $("#fps").text(fps.toFixed(1));
             time = newTime;
             $("#message").text("");
-
-
-            var vel = data.velocity;
-            var pos = data.position;
-            $("#position-data-area").empty()
-            $("#position-data-area").append("<p>vx:"+vel[0]+"vy:"+vel[1]+"vz:"+vel[2]+"</p>");
-            $("#position-data-area").append("<p>rx:"+pos[0]+"ry:"+pos[1]+"rz:"+pos[2]+"</p>");
 
         }else{
             $("#message").text(data.message);

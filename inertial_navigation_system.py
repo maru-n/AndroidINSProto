@@ -116,7 +116,7 @@ class VN100INS(INS):
             8,
             BG1_TIME_STARTUP|BG1_QTN|BG1_DELTA_THETA,
             BG3_ACCEL|BG3_GYRO|BG3_MAG,
-            BG5_LINEAR_ACCEL_NED,
+            BG5_NONE,
             True)
         if err_code != VNERR_NO_ERROR:
             raise Exception('Error code: %d' % err_code)
@@ -155,10 +155,11 @@ class VN100INS(INS):
         self.__magnetic = (data.magnetic.c0, data.magnetic.c1, data.magnetic.c2)
 
         dt = data.deltaTime
+        pre_vel = list(self.__vel)
         self.__vel[0] += data.deltaVelocity.c0
         self.__vel[1] += data.deltaVelocity.c1
         self.__vel[2] += data.deltaVelocity.c2
-        self.__pos[0] += self.__vel[0] * dt
-        self.__pos[1] += self.__vel[1] * dt
-        self.__pos[2] += self.__vel[2] * dt
+        self.__pos[0] += (self.__vel[0] + pre_vel[0]) * dt * 0.5
+        self.__pos[1] += (self.__vel[1] + pre_vel[1]) * dt * 0.5
+        self.__pos[2] += (self.__vel[2] + pre_vel[2]) * dt * 0.5
 

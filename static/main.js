@@ -95,7 +95,7 @@ function init_position_display(element_id) {
     scene_p = new THREE.Scene();
 
     var material = new THREE.LineBasicMaterial({
-        color: 0x333333
+        color: 0x666666
     });
     const GRID_RANGE = 20;
     const GRID_TICK = 1;
@@ -113,7 +113,7 @@ function init_position_display(element_id) {
     }
 
     camera_p = new THREE.PerspectiveCamera( 45, width/height, 1, 10000 );
-    camera_p.position.z = 10;
+    camera_p.position.z = 5;
 
     renderer_p = new THREE.WebGLRenderer();
     renderer_p.setSize( width, height );
@@ -124,18 +124,19 @@ function init_position_display(element_id) {
 
 function update_position_display(data) {
     var pos = data.position;
-    var x = pos[0];
-    var y = pos[1];
-    var radius = 0.05;
+    // pos is NED frame and display North->y, East->x, Down->z
+    var display_x = pos[1];
+    var display_y = pos[0];
+    var radius = 0.02;
     var segments = 8;
 
     var material = new THREE.MeshBasicMaterial({
-        color: 0x000099
+        color: 'blue'
     });
     var circleGeometry = new THREE.CircleGeometry( radius, segments );
     var circle = new THREE.Mesh( circleGeometry, material );
-    circle.position.x = x;
-    circle.position.y = y;
+    circle.position.x = display_x;
+    circle.position.y = display_y;
     //circle.position.z = pos[2];
     scene_p.add(circle);
     renderer_p.render(scene_p, camera_p);

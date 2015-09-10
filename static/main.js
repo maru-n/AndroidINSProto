@@ -87,8 +87,13 @@ function update_attitude_display(data) {
 }
 
 var renderer_p, scene_p, camera_p;
+var $data_string_area
 function init_position_display(element_id) {
     var $target = $('#'+element_id);
+
+    $data_string_area = $('<div></div>');
+    $target.append($data_string_area);
+
     var target_width = $target.width();
     var width = target_width;
     var height = 500;
@@ -124,6 +129,7 @@ function init_position_display(element_id) {
 
 function update_position_display(data) {
     var pos = data.position;
+    var vel = data.velocity;
     // pos is NED frame and display North->y, East->x, Down->z
     var display_x = pos[1];
     var display_y = pos[0];
@@ -139,7 +145,15 @@ function update_position_display(data) {
     circle.position.y = display_y;
     //circle.position.z = pos[2];
     scene_p.add(circle);
+
+    camera_p.position.x = display_x;
+    camera_p.position.y = display_y;
     renderer_p.render(scene_p, camera_p);
+
+    var data_html = "x:" + pos[1] + " y:" + pos[0] + " z: " + pos[2] + "<br/>" +
+                    "vx:" + vel[1] + " vy:" + vel[0] + " vz: " + vel[2] + "<br/>";
+
+    $data_string_area.html(data_html);
 }
 
 

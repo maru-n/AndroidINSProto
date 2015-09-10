@@ -106,31 +106,31 @@ class VN100INS(INS):
         self.vn100 = Vn100()
         err_code = vn100_connect(self.vn100, self._serial_device_name, 115200)
         if err_code != VNERR_NO_ERROR:
-            raise Exception('Error code: %d' % err_code)
+            raise Exception('Failed to connect to vn100. (Error code:%d)' % err_code)
         err_code = vn100_setAsynchronousDataOutputType(self.vn100, VNASYNC_OFF, True)
         if err_code != VNERR_NO_ERROR:
-            raise Exception('Error code: %d' % err_code)
+            raise Exception('Failed to disabe asynchronous ascii output. (Error code:%d)' % err_code)
         err_code = vn100_setBinaryOutput1Configuration(
             self.vn100,
             BINARY_ASYNC_MODE_SERIAL_2,
-            8,
-            BG1_TIME_STARTUP|BG1_QTN|BG1_DELTA_THETA,
+            4,
+            BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_QTN,
             BG3_ACCEL|BG3_GYRO|BG3_MAG,
             BG5_NONE,
             True)
         if err_code != VNERR_NO_ERROR:
-            raise Exception('Error code: %d' % err_code)
+            raise Exception('Failed to set binary output configuration. (Error code:%d)' % err_code)
         err_code = vn100_registerAsyncDataReceivedListener(self.vn100, self.__data_listener)
         if err_code != VNERR_NO_ERROR:
-            raise Exception('Error code: %d' % err_code)
+            raise Exception('Failed to register asynchronous data receiver. (Error code:%d)' % err_code)
 
     def stop(self):
         err_code = vn100_unregisterAsyncDataReceivedListener(self.vn100, self.__data_listener);
-        if err_code != VNERR_NO_ERROR:
-            raise Exception('Error code: %d' % err_code)
+        # if err_code != VNERR_NO_ERROR:
+        #     raise Exception('Error code: %d' % err_code)
         err_code = vn100_disconnect(self.vn100);
-        if err_code != VNERR_NO_ERROR:
-            raise Exception('Error code: %d' % err_code)
+        # if err_code != VNERR_NO_ERROR:
+        #     raise Exception('Error code: %d' % err_code)
 
     def get_time(self):
         return self.__time

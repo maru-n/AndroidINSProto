@@ -68,8 +68,12 @@ if __name__ == '__main__':
         ins = AndroidINS(serial_device)
     else:
         exit()
+    try:
+        ins.start()
+    except Exception as e:
+        print("\033[31mError: \033[39m %s" % e)
+        exit()
 
-    ins.start()
     if opts.web_ui:
         web_ui.start(ins)
     else:

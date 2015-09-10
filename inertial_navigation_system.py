@@ -113,7 +113,7 @@ class VN100INS(INS):
         err_code = vn100_setBinaryOutput1Configuration(
             self.vn100,
             BINARY_ASYNC_MODE_SERIAL_2,
-            4,
+            8,
             BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_QTN,
             BG3_ACCEL|BG3_GYRO|BG3_MAG,
             BG5_NONE,

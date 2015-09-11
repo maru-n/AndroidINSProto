@@ -95,14 +95,7 @@ class VN100INS(INS):
     def __init__(self, serial_device_name):
         super(VN100INS, self).__init__()
         self.__serial_device_name = serial_device_name
-        self.__time = 0.
-        self.__time_offset = None
-        self.__qternion = [0., 0., 0., 0.]
-        self.__acceleration = [0., 0., 0.]
-        self.__angular_rate = [0., 0., 0.]
-        self.__magnetic = [0., 0., 0.]
-        self.__vel = [0., 0., 0.]
-        self.__pos = [0., 0., 0.]
+        self.reset_data
         self.__logging = False
 
     def start(self, logging=False):
@@ -144,6 +137,10 @@ class VN100INS(INS):
     def reset_data(self):
         self.__time = 0.
         self.__time_offset = None
+        self.__qternion = [0., 0., 0., 0.]
+        self.__acceleration = [0., 0., 0.]
+        self.__angular_rate = [0., 0., 0.]
+        self.__magnetic = [0., 0., 0.]
         self.__vel = [0., 0., 0.]
         self.__pos = [0., 0., 0.]
 
@@ -217,10 +214,9 @@ class VN100INS(INS):
 
         if self.__logging:
             self.__time_log.append(self.__time)
-            self.__qternion_log.append(self.__quaternion)
-            self.__acceleration_log.append(self.__acceleration)
-            self.__angular_rate_log.append(self.__angular_rate)
-            self.__magnetic_log.append(self.__magnetic)
-            self.__vel_log.append(self.__vel)
-            self.__pos_log.appned(self.__pos)
-
+            self.__qternion_log.append(list(self.__quaternion))
+            self.__acceleration_log.append(list(self.__acceleration))
+            self.__angular_rate_log.append(list(self.__angular_rate))
+            self.__magnetic_log.append(list(self.__magnetic))
+            self.__vel_log.append(list(self.__vel))
+            self.__pos_log.appned(list(self.__pos))

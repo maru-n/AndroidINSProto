@@ -7,6 +7,8 @@ import sys
 import select
 import tty
 import termios
+from datetime import datetime
+
 
 class NonBlockingConsole(object):
 
@@ -37,6 +39,8 @@ def start(ins):
             elif key in ['l']:
                 if ins.is_logging():
                     ins.stop_logging()
+                    filename = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    ins.save_logfile(filename)
                 else:
                     ins.start_logging()
             elif key in ['r']:

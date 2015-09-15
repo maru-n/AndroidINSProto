@@ -51,6 +51,9 @@ if __name__ == '__main__':
     parser.add_option("-w", "--web-ui",
                       action="store_true", dest="web_ui", default=False,
                       help="use web UI.")
+    parser.add_option("-l", "--log",
+                      action="store_true", dest="log", default=False,
+                      help="with logging")
     parser.add_option("-d", "--device", dest="device", type='choice',
                       choices=['vn100', 'android'], default='vn100',
                       help="sensor device (vn100|android)")
@@ -69,7 +72,7 @@ if __name__ == '__main__':
     else:
         exit()
     try:
-        ins.start()
+        ins.start(logging = opts.log)
     except Exception as e:
         print("\033[31mError: \033[39m %s" % e)
         exit()
@@ -78,3 +81,5 @@ if __name__ == '__main__':
         web_ui.start(ins)
     else:
         cui.start(ins)
+
+    ins.stop()

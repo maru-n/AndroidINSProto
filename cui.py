@@ -28,7 +28,7 @@ class NonBlockingConsole(object):
 
 
 def start(ins):
-    sys.stdout.write('\nr: reset data   l: start/stop logging   q,ESC: quit\n')
+    sys.stdout.write('\nr: reset data   l: start/stop log   q,ESC: quit\n')
     with NonBlockingConsole() as nbc:
         clr_txt = ''
         while True:
@@ -60,6 +60,8 @@ def start(ins):
                 msg += 'qtn(x:% 9.5f y:% 9.5f z:% 9.5f w:% 9.5f)  \n' % (qx, qy, qz, qw)
                 msg += 'vel(x:% 9.5f y:% 9.5f z:% 9.5f)  \n' % (vx, vy, vz)
                 msg += 'pos(x:% 9.5f y:% 9.5f z:% 9.5f)  \n' % (rx, ry, rz)
+                if ins.is_logging():
+                    msg += "\033[31m[Recording]\033[39m\n"
 
             except Exception:
                 msg += 'no data available.\n'

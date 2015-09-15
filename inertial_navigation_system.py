@@ -219,4 +219,4 @@ class VN100INS(INS):
             self.__angular_rate_log.append(list(self.__angular_rate))
             self.__magnetic_log.append(list(self.__magnetic))
             self.__vel_log.append(list(self.__vel))
-            self.__pos_log.appned(list(self.__pos))
+            #self.__pos_log.appned(list(self.__pos))

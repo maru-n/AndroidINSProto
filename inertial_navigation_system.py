@@ -95,7 +95,7 @@ class VN100INS(INS):
     def __init__(self, serial_device_name):
         super(VN100INS, self).__init__()
         self.__serial_device_name = serial_device_name
-        self.reset_data
+        self.reset_data()
         self.__logging = False
 
     def start(self, logging=False):

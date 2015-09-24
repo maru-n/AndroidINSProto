@@ -18,7 +18,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.render("index.html")
 
 
-class AllDataHandler(tornado.websocket.WebSocketHandler):
+class AllDataHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         data = {}
@@ -45,9 +45,19 @@ class AllDataHandler(tornado.websocket.WebSocketHandler):
         self.finish()
 
 
+class ResetDataHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def post(self):
+        ins.reset_data()
+        data = {'result': 'successed'}
+        self.write(json.dumps(data, ensure_ascii=False))
+        self.finish()
+
+
 app = tornado.web.Application([
     (r"/", MainHandler),
-    (r"/alldata", AllDataHandler)],
+    (r"/alldata", AllDataHandler),
+    (r"/resetdata", ResetDataHandler)],
     template_path=os.path.join(os.getcwd(),  "templates"),
     static_path=os.path.join(os.getcwd(),  "static"),
 )

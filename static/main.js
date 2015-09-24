@@ -56,6 +56,7 @@ var renderer, scene, camera, cube;
 
 function init_attitude_display(element_id) {
     var $target = $('#'+element_id);
+    $target.empty();
     var renderSize = $target.width();
     scene = new THREE.Scene();
 
@@ -90,6 +91,7 @@ var renderer_p, scene_p, camera_p;
 var $data_string_area
 function init_position_display(element_id) {
     var $target = $('#'+element_id);
+    $target.empty();
 
     $data_string_area = $('<div></div>');
     $target.append($data_string_area);
@@ -186,5 +188,12 @@ $(function(){
     init_sensor_data_charts('accel-chart', 'angr-chart', 'mag-chart');
     init_attitude_display('attitude-data-area');
     init_position_display('position-data-area');
+    $("#reset-btn").click(function(){
+      $.post('/resetdata', function(data){
+        init_sensor_data_charts('accel-chart', 'angr-chart', 'mag-chart');
+        init_attitude_display('attitude-data-area');
+        init_position_display('position-data-area');
+      });
+    });
     update();
 });

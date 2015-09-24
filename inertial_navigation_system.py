@@ -117,7 +117,7 @@ class VN100INS(INS):
             1,
             BINARY_ASYNC_MODE_SERIAL_2,
             1,
-            BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_DELTA_THETA|BG1_QTN,
+            BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_QTN,
             BG3_ACCEL|BG3_GYRO|BG3_MAG,
             BG5_NONE,
             True)

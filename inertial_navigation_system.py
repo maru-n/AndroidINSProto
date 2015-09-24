@@ -112,11 +112,12 @@ class VN100INS(INS):
         err_code = vn100_setAsynchronousDataOutputType(self.vn100, VNASYNC_OFF, True)
         if err_code != VNERR_NO_ERROR:
             raise Exception('Failed to disabe asynchronous ascii output. (Error code:%d)' % err_code)
-        err_code = vn100_setBinaryOutput1Configuration(
+        err_code = vn100_setBinaryOutputConfiguration(
             self.vn100,
+            1,
             BINARY_ASYNC_MODE_SERIAL_2,
-            8,
-            BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_QTN,
+            1,
+            BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_DELTA_THETA|BG1_QTN,
             BG3_ACCEL|BG3_GYRO|BG3_MAG,
             BG5_NONE,
             True)

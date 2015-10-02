@@ -92,19 +92,20 @@ class AndroidINS(INS):
 from vectornav import *
 
 class VN100INS(INS):
-    def __init__(self, serial_device_name, serial_baudrate=115200):
+    def __init__(self, serial_device_name):
         super(VN100INS, self).__init__()
         self.vn100 = Vn100()
         self.__serial_device_name = serial_device_name
-        self.__serial_baudrate = serial_baudrate
         self.reset_data()
         self.__logging = False
 
     def start(self, logging=False):
         if logging:
             self.start_logging()
+        self.__setup_vn100()
 
-        err_code = vn100_connect(self.vn100, self.__serial_device_name, self.__serial_baudrate)
+    def __setup_vn100(self):
+        err_code = vn100_connect(self.vn100, self.__serial_device_name, 921600)
         if err_code != VNERR_NO_ERROR:
             raise Exception('Failed to connect to vn100. (Error code:%d)' % err_code)
         err_code = vn100_setAsynchronousDataOutputType(self.vn100, VNASYNC_OFF, True)

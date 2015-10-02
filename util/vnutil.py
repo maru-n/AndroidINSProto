@@ -18,7 +18,6 @@ def main():
 
 
 def send_command(deviceName, baudrate, command, *commandArgs, printResult=False):
-
     serialCommand = "$VN" + command + ','.join([""] + list(commandArgs)) + "*XX\n"
     serialDevice = serial.Serial(deviceName, baudrate, timeout=1.0)
 
@@ -27,24 +26,35 @@ def send_command(deviceName, baudrate, command, *commandArgs, printResult=False)
     if printResult:
         print("Command : " + serialCommand, end="")
     send_serial_message(serialDevice, serialCommand)
-    lines = serialDevice.readlines()
+    lines = serialDevice.readlines(1000)  # line number limitation is to avoid timeout problem on readlines()
     # resume async output
     switch_async_output(serialDevice, True)
+
+    serialDevice.close()
 
     if len(lines) == 0:
         if printResult:
             print("Response: none")
         return False
 
-    response = lines[-1].decode()
+    try:
+        response = lines[-1].decode()
+    except UnicodeDecodeError:
+        if printResult:
+            print("Response: invalid")
+        return False
+
     if printResult:
         print("Response: " + response, end="")
 
-    serialDevice.close()
     if response.find('$VN'+command) == -1:
         return False
     else:
         return True
+
+
+def write_register(deviceName, baudrate, registerId, *args, printResult=False):
+    return send_command(deviceName, baudrate, "WRG", *([str(registerId)] + [str(a) for a in args]), printResult=printResult)
 
 
 def switch_async_output(serialDevice, on=True):

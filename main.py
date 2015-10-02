@@ -58,7 +58,7 @@ if __name__ == '__main__':
                       choices=['vn100', 'android'], default='vn100',
                       help="sensor device (vn100|android)")
     parser.add_option("-b", "--baudrate", dest="baudrate", type='int',
-                      default=115200, help="serial baud rate")
+                      default=115200, help="serial baud rate (Android only)")
 
 
     (opts, args) = parser.parse_args()
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         serial_device = args[0]
 
     if opts.device == 'vn100':
-        ins = VN100INS(serial_device, serial_baudrate=opts.baudrate)
+        ins = VN100INS(serial_device)
     elif opts.device == 'android':
         ins = AndroidINS(serial_device, serial_baudrate=opts.baudrate)
     else:

@@ -11,10 +11,10 @@ def main():
     deviceName = sys.argv[1]
     command = sys.argv[2]
     args = sys.argv[3:]
-    send_command(deviceName, command, *args)
+    send_command(deviceName, command, *args, printResult=True)
 
 
-def send_command(deviceName, command, *commandArgs):
+def send_command(deviceName, command, *commandArgs, printResult=False):
 
     serialCommand = "$VN" + command + ','.join([""] + list(commandArgs)) + "*XX\n"
     serialDevice = serial.Serial(deviceName, 115200, timeout=1.0)
@@ -22,16 +22,22 @@ def send_command(deviceName, command, *commandArgs):
     # stop async output
     switch_async_output(serialDevice, False)
 
-    print("Command : " + serialCommand, end="")
+    if printResult:
+        print("Command : " + serialCommand, end="")
     send_serial_message(serialDevice, serialCommand)
     lines = serialDevice.readlines()
     response = lines[-1].decode()
-    print("Response: " + response)
+    if printResult:
+        print("Response: " + response)
 
     # resume async output
     switch_async_output(serialDevice, True)
 
     serialDevice.close()
+    if response.find('$VNERR') == -1:
+        return False
+    else:
+        return True
 
 
 def switch_async_output(serialDevice, on=True):

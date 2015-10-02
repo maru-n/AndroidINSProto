@@ -3,38 +3,46 @@
 import serial
 import sys
 
-serialDevice = None
-
 def main():
-    global serialDevice
+    if len(sys.argv) < 3:
+        print("Usage:")
+        print("\t" + sys.argv[0].split('/')[-1] + " [device_name] [command] [*command_args]")
+        return
     deviceName = sys.argv[1]
+    command = sys.argv[2]
+    args = sys.argv[3:]
+    send_command(deviceName, command, *args)
+
+
+def send_command(deviceName, command, *commandArgs):
+
+    serialCommand = "$VN" + command + ','.join([""] + list(commandArgs)) + "*XX\n"
     serialDevice = serial.Serial(deviceName, 115200, timeout=1.0)
 
     # stop async output
-    switch_async_output(False)
+    switch_async_output(serialDevice, False)
 
-    command = "$VN" + sys.argv[2] + ','.join([''] + sys.argv[3:]) + "*XX\n"
-    print("Command : " + command, end="")
-    send_command(command)
+    print("Command : " + serialCommand, end="")
+    send_serial_message(serialDevice, serialCommand)
     lines = serialDevice.readlines()
     response = lines[-1].decode()
     print("Response: " + response)
 
     # resume async output
-    switch_async_output(True)
+    switch_async_output(serialDevice, True)
 
     serialDevice.close()
 
 
-def switch_async_output(on=True):
+def switch_async_output(serialDevice, on=True):
     if on:
         command = "$VNASY,1*XX\n"
     else:
         command = "$VNASY,0*XX\n"
-    send_command(command)
+    send_serial_message(serialDevice, command)
 
 
-def send_command(command):
+def send_serial_message(serialDevice, command):
     byteCommand = command.encode()
     ret = serialDevice.write(byteCommand)
     if ret != len(byteCommand):
@@ -43,4 +51,3 @@ def send_command(command):
 
 if __name__ == '__main__':
     main()
-

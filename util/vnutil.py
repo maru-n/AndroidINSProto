@@ -1,40 +1,47 @@
 #!/usr/bin/env python
 
 import serial
-import sys
+from optparse import OptionParser
+
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage:")
-        print("\t" + sys.argv[0].split('/')[-1] + " [device_name] [command] [*command_args]")
+    parser = OptionParser(usage="usage: %prog [options] device_name command *command_args")
+    parser.add_option("-b", "--baudrate", dest="baudrate", type='int',
+                      default=115200, help="serial baud rate")
+    (opts, args) = parser.parse_args()
+
+    if len(args) < 2:
+        parser.print_help()
         return
-    deviceName = sys.argv[1]
-    command = sys.argv[2]
-    args = sys.argv[3:]
-    send_command(deviceName, command, *args, printResult=True)
+
+    send_command(args[0], opts.baudrate, args[1], *args[2:], printResult=True)
 
 
-def send_command(deviceName, command, *commandArgs, printResult=False):
+def send_command(deviceName, baudrate, command, *commandArgs, printResult=False):
 
     serialCommand = "$VN" + command + ','.join([""] + list(commandArgs)) + "*XX\n"
-    serialDevice = serial.Serial(deviceName, 115200, timeout=1.0)
+    serialDevice = serial.Serial(deviceName, baudrate, timeout=1.0)
 
     # stop async output
     switch_async_output(serialDevice, False)
-
     if printResult:
         print("Command : " + serialCommand, end="")
     send_serial_message(serialDevice, serialCommand)
     lines = serialDevice.readlines()
-    response = lines[-1].decode()
-    if printResult:
-        print("Response: " + response)
-
     # resume async output
     switch_async_output(serialDevice, True)
 
+    if len(lines) == 0:
+        if printResult:
+            print("Response: none")
+        return False
+
+    response = lines[-1].decode()
+    if printResult:
+        print("Response: " + response, end="")
+
     serialDevice.close()
-    if response.find('$VNERR') == -1:
+    if response.find('$VN'+command) == -1:
         return False
     else:
         return True

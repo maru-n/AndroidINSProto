@@ -59,8 +59,8 @@ app = tornado.web.Application([
     (r"/", MainHandler),
     (r"/alldata", AllDataHandler),
     (r"/resetdata", ResetDataHandler)],
-    template_path=os.path.join(os.getcwd(),  "templates"),
-    static_path=os.path.join(os.getcwd(),  "static"),
+    template_path=os.path.join(os.path.abspath(os.path.dirname(__file__)),  "templates"),
+    static_path=os.path.join(os.path.abspath(os.path.dirname(__file__)),  "static"),
 )
 
 

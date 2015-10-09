@@ -2,6 +2,7 @@
 
 import sys
 import time
+import os
 
 import sys
 import select
@@ -39,7 +40,7 @@ def start(ins):
             elif key in ['l']:
                 if ins.is_logging():
                     ins.stop_logging()
-                    filename = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = os.path.join(os.getcwd(), datetime.now().strftime('%Y%m%d_%H%M%S'))
                     ins.save_logfile(filename)
                 else:
                     ins.start_logging()

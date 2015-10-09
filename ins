@@ -4,5 +4,5 @@ SCRIPT=$0
 if [ -n "`readlink $SCRIPT`" ] ; then
     SCRIPT="`readlink $SCRIPT`"
 fi
-cd $(dirname $SCRIPT)/src
-python main.py $@
+SRC_DIR=$(cd $(dirname $SCRIPT)/src && pwd)
+python ${SRC_DIR}/main.py $@

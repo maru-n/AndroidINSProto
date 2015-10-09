@@ -26,8 +26,8 @@ class AllDataHandler(tornado.web.RequestHandler):
             t = ins.get_time()
             ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
             qx, qy, qz, qw = ins.get_quaternion()
-            vx, vy, vz = ins.get_velocity()
-            rx, ry, rz = ins.get_position()
+            dvx, dvy, dvz, vx, vy, vz, rx, ry, rz = ins.get_navigation_state()
+
 
             data["time"] = ins.get_time()
             data["result"] = "successed"
@@ -35,6 +35,7 @@ class AllDataHandler(tornado.web.RequestHandler):
             data["angular_rate"] = [gx, gy, gz]
             data["magnetic"] = [mx, my, mz]
             data["quaternion"] = [qx, qy, qz, qw]
+            data["delta_velocity"] = [dvx, dvy, dvz]
             data["velocity"] = [vx, vy, vz]
             data["position"] = [rx, ry, rz]
         except Exception:

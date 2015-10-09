@@ -141,6 +141,7 @@ class VN100INS(INS):
         self.__acceleration = [0., 0., 0.]
         self.__angular_rate = [0., 0., 0.]
         self.__magnetic = [0., 0., 0.]
+        self.__dv = [0., 0., 0.]
         self.__vel = [0., 0., 0.]
         self.__pos = [0., 0., 0.]
 
@@ -152,6 +153,12 @@ class VN100INS(INS):
 
     def get_all_sensor_data(self):
         return self.__acceleration + self.__angular_rate + self.__magnetic
+
+    def get_navigation_state(self):
+        return self.__dv + self.__vel + self.__pos
+
+    def get_delta_velocity(self):
+        return self.__dv
 
     def get_velocity(self):
         return self.__vel
@@ -165,6 +172,7 @@ class VN100INS(INS):
         self.__acceleration_log = []
         self.__angular_rate_log = []
         self.__magnetic_log = []
+        self.__dv_log = []
         self.__vel_log = []
         self.__pos_log = []
 
@@ -188,6 +196,7 @@ class VN100INS(INS):
                  acl = np.array(self.__acceleration_log),
                  ang = np.array(self.__angular_rate_log),
                  mag = np.array(self.__magnetic_log),
+                 dv = np.array(self.__dv_log),
                  vel = np.array(self.__vel_log),
                  pos = np.array(self.__pos_log)
                  )
@@ -196,7 +205,10 @@ class VN100INS(INS):
     def __data_listener(self, sender, data):
         if self.__time_offset is None:
             self.__time_offset = data.timeStartup * 1e-9
+        pre_time = self.__time
         self.__time = data.timeStartup * 1e-9 - self.__time_offset
+        if self.__time < pre_time:
+            print("error: " + str(pre_time))
         self.__quaternion = (data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w)
         self.__acceleration = (data.acceleration.c0, data.acceleration.c1, data.acceleration.c2)
         self.__angular_rate = (data.angularRate.c0, data.angularRate.c1, data.angularRate.c2)
@@ -204,9 +216,13 @@ class VN100INS(INS):
 
         dt = data.deltaTime
         pre_vel = list(self.__vel)
-        self.__vel[0] += data.deltaVelocity.c0
-        self.__vel[1] += data.deltaVelocity.c1
-        self.__vel[2] += data.deltaVelocity.c2
+        self.__dv[0] = data.deltaVelocity.c0
+        self.__dv[1] = data.deltaVelocity.c1
+        self.__dv[2] = data.deltaVelocity.c2
+
+        self.__vel[0] += self.__dv[0]
+        self.__vel[1] += self.__dv[1]
+        self.__vel[2] += self.__dv[2]
 
         self.__pos[0] += (self.__vel[0] + pre_vel[0]) * dt * 0.5
         self.__pos[1] += (self.__vel[1] + pre_vel[1]) * dt * 0.5
@@ -218,5 +234,6 @@ class VN100INS(INS):
             self.__acceleration_log.append(list(self.__acceleration))
             self.__angular_rate_log.append(list(self.__angular_rate))
             self.__magnetic_log.append(list(self.__magnetic))
+            self.__dv_log.append(list(self.__dv))
             self.__vel_log.append(list(self.__vel))
             self.__pos_log.append(list(self.__pos))

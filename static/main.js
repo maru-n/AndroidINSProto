@@ -89,7 +89,7 @@ function update_attitude_display(data) {
 
 var renderer_p, scene_p, camera_p;
 var $data_string_area
-function init_position_display(element_id) {
+function init_navigation_display(element_id) {
     var $target = $('#'+element_id);
     $target.empty();
 
@@ -129,12 +129,13 @@ function init_position_display(element_id) {
     $target.append(renderer_p.domElement);
 }
 
-function update_position_display(data) {
+function update_navigation_display(data) {
     var pos = data.position;
     var vel = data.velocity;
+    var dv = data.delta_velocity;
     // pos is NED frame and display North->y, East->x, Down->z
-    var display_x = pos[1];
-    var display_y = pos[0];
+    var pos_north = pos[1];
+    var pos_east  = pos[0];
     var radius = 0.02;
     var segments = 8;
 
@@ -143,17 +144,17 @@ function update_position_display(data) {
     });
     var circleGeometry = new THREE.CircleGeometry( radius, segments );
     var circle = new THREE.Mesh( circleGeometry, material );
-    circle.position.x = display_x;
-    circle.position.y = display_y;
+    circle.position.x = pos_east;
+    circle.position.y = pos_north;
     //circle.position.z = pos[2];
     scene_p.add(circle);
 
-    camera_p.position.x = display_x;
-    camera_p.position.y = display_y;
+    camera_p.position = circle.position
     renderer_p.render(scene_p, camera_p);
 
-    var data_html = "x:" + pos[1] + " y:" + pos[0] + " z: " + pos[2] + "<br/>" +
-                    "vx:" + vel[1] + " vy:" + vel[0] + " vz: " + vel[2] + "<br/>";
+    var data_html = "dvx:" + dv[0]  + " dvy:" + dv[1]  + " vz: " + dv[2]  + "<br/>" +
+                    "vx:"  + vel[0] + " vy:"  + vel[1] + " vz: " + vel[2] + "<br/>" +
+                    "x:"   + pos[0] + " y:"   + pos[1] + " z: "  + pos[2] + "<br/>";
 
     $data_string_area.html(data_html);
 }
@@ -167,7 +168,7 @@ function update() {
         if (data.result == "successed") {
             update_sensor_data_charts(data);
             update_attitude_display(data);
-            update_position_display(data);
+            update_navigation_display(data);
 
             var newTime = data.time;
             $("#time").text(newTime.toFixed(2));
@@ -187,12 +188,12 @@ function update() {
 $(function(){
     init_sensor_data_charts('accel-chart', 'angr-chart', 'mag-chart');
     init_attitude_display('attitude-data-area');
-    init_position_display('position-data-area');
+    init_navigation_display('navigation-data-area');
     $("#reset-btn").click(function(){
       $.post('/resetdata', function(data){
         init_sensor_data_charts('accel-chart', 'angr-chart', 'mag-chart');
         init_attitude_display('attitude-data-area');
-        init_position_display('position-data-area');
+        init_navigation_display('navigation-data-area');
       });
     });
     update();

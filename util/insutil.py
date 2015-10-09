@@ -12,21 +12,39 @@ def setup():
     print("Baudrate... ", end="", flush=True)
     for br in available_baudrate:
         if vnutil.write_register(serial_device_name, br, 5, baudrate):
-            print("\033[32mOK\033[39m\n")
+            print("\033[32mOK\033[39m")
             break
     else:
-        print("\033[31mError\033[39m\n")
+        print("\033[31mError\033[39m")
         return
+
+    #set_indoor_heading_mode()
+    set_delta_theta_velocity_configuration()
+
+
+def set_indoor_heading_mode():
+    print("IndoorHeadingMode... ", end="", flush=True)
+    if vnutil.write_register(serial_device_name, baudrate, 35, 1, 2, 1, 1):
+        print("\033[32mOK\033[39m")
+    else:
+        print("\033[31mError\033[39m")
+
+def set_delta_theta_velocity_configuration():
+    print("DeltaTheta and DeltaVelocity configuration... ", end="", flush=True)
+    if vnutil.write_register(serial_device_name, baudrate, 82, 1, 1, 1, 0, 0):
+        print("\033[32mOK\033[39m")
+    else:
+        print("\033[31mError\033[39m")
 
 
 def reset():
     print("Reset... ", end="", flush=True)
     for br in available_baudrate:
         if vnutil.send_command(serial_device_name, br, 'RFS'):
-            print("\033[32mOK\033[39m\n")
+            print("\033[32mOK\033[39m")
             break
     else:
-        print("\033[31mError\033[39m\n")
+        print("\033[31mError\033[39m")
         return
 
 

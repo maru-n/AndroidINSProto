@@ -9,6 +9,7 @@ baudrate = 921600
 
 
 def setup():
+    reset()
     print("Baudrate... ", end="", flush=True)
     for br in available_baudrate:
         if vnutil.write_register(serial_device_name, br, 5, baudrate):
@@ -20,10 +21,19 @@ def setup():
 
     #set_indoor_heading_mode()
     set_delta_theta_velocity_configuration()
+    #set_world_magnetic_and_gravity_model()
+
+
+def set_world_magnetic_and_gravity_model():
+    print("World Magnetic and Gravity Model... ", end="", flush=True)
+    if vnutil.write_register(serial_device_name, baudrate, 83, 1, 1, 0, 0, 1000, 2015, 35.689488, 139.691706, 0):
+        print("\033[32mOK\033[39m")
+    else:
+        print("\033[31mError\033[39m")
 
 
 def set_indoor_heading_mode():
-    print("IndoorHeadingMode... ", end="", flush=True)
+    print("Indoor Heading Mode... ", end="", flush=True)
     if vnutil.write_register(serial_device_name, baudrate, 35, 1, 2, 1, 1):
         print("\033[32mOK\033[39m")
     else:

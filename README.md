@@ -5,6 +5,7 @@
 - Python (3.3.6)
 - pyserial
 - tornado
+- numpy
 
 ## Setup
 
@@ -14,10 +15,10 @@
     
 ### install dependency
     $ sudo aptitude install libboost-all-dev  
-    $ sudo pip install pyserial tornado
+    $ sudo pip install pyserial tornado numpy
     
 ### setup
     $ git submodule init
     $ git submodule update
-    $ cd vnccpplib/python
+    $ cd src/vnccpplib/python
     $ make

@@ -14,7 +14,7 @@
     Python 3.3.6
     
 ### install dependency
-    $ sudo aptitude install libboost-all-dev  
+    $ sudo aptitude install libboost-python-dev  
     $ sudo pip install pyserial tornado numpy
     
 ### setup

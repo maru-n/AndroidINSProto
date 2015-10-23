@@ -137,13 +137,13 @@ class VN100INS(INS):
     def reset_data(self):
         self.__time = 0.
         self.__time_offset = None
-        self.__qternion = [0., 0., 0., 0.]
-        self.__acceleration = [0., 0., 0.]
-        self.__angular_rate = [0., 0., 0.]
-        self.__magnetic = [0., 0., 0.]
-        self.__dv = [0., 0., 0.]
-        self.__vel = [0., 0., 0.]
-        self.__pos = [0., 0., 0.]
+        self.__qternion = np.zeros(4)
+        self.__acceleration = np.zeros(3)
+        self.__angular_rate = np.zeros(3)
+        self.__magnetic = np.zeros(3)
+        self.__dv = np.zeros(3)
+        self.__vel = np.zeros(3)
+        self.__pos = np.zeros(3)
 
     def get_time(self):
         return self.__time
@@ -152,10 +152,10 @@ class VN100INS(INS):
         return self.__quaternion
 
     def get_all_sensor_data(self):
-        return self.__acceleration + self.__angular_rate + self.__magnetic
+        return np.r_[self.__acceleration, self.__angular_rate, self.__magnetic]
 
     def get_navigation_state(self):
-        return self.__dv + self.__vel + self.__pos
+        return np.r_[self.__dv, self.__vel, self.__pos]
 
     def get_delta_velocity(self):
         return self.__dv
@@ -220,9 +220,16 @@ class VN100INS(INS):
         self.__dv[1] = data.deltaVelocity.c1
         self.__dv[2] = data.deltaVelocity.c2
 
-        self.__vel[0] += self.__dv[0]
-        self.__vel[1] += self.__dv[1]
-        self.__vel[2] += self.__dv[2]
+        # Zero velocity detection
+        #if np.all(self.__dv < 0.0005):
+        if False:
+            self.__vel[0] = 0.
+            self.__vel[1] = 0.
+            self.__vel[2] = 0.
+        else:
+            self.__vel[0] += self.__dv[0]
+            self.__vel[1] += self.__dv[1]
+            self.__vel[2] += self.__dv[2]
 
         self.__pos[0] += (self.__vel[0] + pre_vel[0]) * dt * 0.5
         self.__pos[1] += (self.__vel[1] + pre_vel[1]) * dt * 0.5

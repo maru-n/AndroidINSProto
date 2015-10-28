@@ -22,9 +22,10 @@ def main():
     else:
         baudrate = detect_baud_rate(deviceName)
         if baudrate is None:
-            print("Failed to detect baudrate. Please reset device.")
+            print("Failed to detect current baudrate. Please reset device.")
             return
         print("Detected baudrate: ", baudrate)
+        return
 
     command = args[1]
 
@@ -48,18 +49,21 @@ baudrate_list = [
 COMMAND_RESPONSE_WAIT_TIME = 0.1
 
 def detect_baud_rate(deviceName):
-    serialDevice = serial.Serial(deviceName, timeout=0)
+    serialDevice = serial.Serial(deviceName, timeout=0, writeTimeout=0)
     for br in baudrate_list:
         serialDevice.baudrate = br
+        send_serial_message(serialDevice, "$VNRRG,1*XX\n")
         start = clock()
         while (clock()-start) < COMMAND_RESPONSE_WAIT_TIME:
             raw_l = serialDevice.readline()
             try:
                 s = raw_l.decode()[:3]
                 if s == '$VN':
+                    serialDevice.close()
                     return br
             except Exception as e:
                 pass
+    serialDevice.close()
     return None
 
 def send_command(deviceName, baudrate, command, *commandArgs, printResult=False):

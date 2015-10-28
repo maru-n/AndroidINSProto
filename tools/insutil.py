@@ -21,7 +21,8 @@ def set_baudrate():
     current_baudrate = vnutil.detect_baud_rate(serial_device_name)
     if current_baudrate is None:
         print("\033[31mError\033[39m")
-    if vnutil.write_register(serial_device_name, current_baudrate, 5, baudrate):
+        print("Failed to detect current baudrate. Please reset device.")
+    elif vnutil.write_register(serial_device_name, current_baudrate, 5, baudrate):
         print("\033[32mOK\033[39m")
     else:
         print("\033[31mError\033[39m")

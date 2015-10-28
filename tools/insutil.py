@@ -9,7 +9,7 @@ baudrate = 921600
 
 
 def setup():
-    reset()
+    #reset()
     print("Baudrate... ", end="", flush=True)
     for br in available_baudrate:
         if vnutil.write_register(serial_device_name, br, 5, baudrate):

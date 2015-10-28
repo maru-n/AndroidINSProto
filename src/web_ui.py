@@ -24,9 +24,9 @@ class AllDataHandler(tornado.web.RequestHandler):
         data = {}
         try:
             t = ins.get_time()
-            ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
+            (ax, ay, az), (gx, gy, gz), (mx, my, mz) = ins.get_all_sensor_data()
             qx, qy, qz, qw = ins.get_quaternion()
-            dvx, dvy, dvz, vx, vy, vz, rx, ry, rz = ins.get_navigation_state()
+            (dvx, dvy, dvz), (vx, vy, vz), (rx, ry, rz) = ins.get_navigation_state()
 
 
             data["time"] = ins.get_time()

@@ -152,10 +152,10 @@ class VN100INS(INS):
         return self.__quaternion
 
     def get_all_sensor_data(self):
-        return np.r_[self.__acceleration, self.__angular_rate, self.__magnetic]
+        return (self.__acceleration, self.__angular_rate, self.__magnetic)
 
     def get_navigation_state(self):
-        return np.r_[self.__dv, self.__vel, self.__pos]
+        return (self.__dv, self.__vel, self.__pos)
 
     def get_delta_velocity(self):
         return self.__dv

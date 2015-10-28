@@ -50,9 +50,9 @@ def start(ins):
             msg = ''
             try:
                 t = ins.get_time()
-                ax, ay, az, gx, gy, gz, mx, my, mz = ins.get_all_sensor_data()
+                (ax, ay, az), (gx, gy, gz), (mx, my, mz) = ins.get_all_sensor_data()
                 qx, qy, qz, qw = ins.get_quaternion()
-                dvx, dvy, dvz, vx, vy, vz, rx, ry, rz = ins.get_navigation_state()
+                (dvx, dvy, dvz), (vx, vy, vz), (rx, ry, rz) = ins.get_navigation_state()
                 msg += 'time:% 10.2f\n' % t
                 msg += 'accel(x:% 10.5f y:% 10.5f z:% 10.5f)\n' % (ax, ay, az)
                 msg += 'angrt(x:% 10.5f y:% 10.5f z:% 10.5f)\n' % (gx, gy, gz)

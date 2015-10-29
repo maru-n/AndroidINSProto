@@ -32,6 +32,8 @@ class NonBlockingConsole(object):
 
 message = ''
 ins = None
+running = False
+saving = False
 
 def __print_status():
     global message
@@ -52,6 +54,8 @@ def __print_status():
         message += 'pos(x:% 9.5f y:% 9.5f z:% 9.5f)  \n' % (rx, ry, rz)
         if ins.is_logging():
             message += "\033[31m[Recording]\033[39m\n"
+        elif saving:
+            message += "\033[31m[Save.....]\033[39m\n"
 
     except Exception:
         message += 'no data available.\n'
@@ -60,8 +64,6 @@ def __print_status():
         sys.stdout.write(clr_txt + message)
         sys.stdout.flush()
 
-
-running = False
 
 def __print_status_loop():
     __print_status()
@@ -72,6 +74,7 @@ def __print_status_loop():
 def start(_ins):
     global ins
     global running
+    global saving
     running = True
     ins = _ins
     print('\nr: reset data   l: start/stop log   q,ESC: quit')
@@ -85,8 +88,10 @@ def start(_ins):
             elif key in ['l']:
                 if ins.is_logging():
                     ins.stop_logging()
+                    saving = True
                     filename = os.path.join(os.getcwd(), datetime.now().strftime('%Y%m%d_%H%M%S'))
                     ins.save_logfile(filename)
+                    saving = False
                 else:
                     ins.start_logging()
             elif key in ['r']:

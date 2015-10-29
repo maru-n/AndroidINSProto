@@ -137,7 +137,7 @@ class VN100INS(INS):
     def reset_data(self):
         self.__time = 0.
         self.__time_offset = None
-        self.__qternion = np.zeros(4)
+        self.__quaternion = np.zeros(4)
         self.__acceleration = np.zeros(3)
         self.__angular_rate = np.zeros(3)
         self.__magnetic = np.zeros(3)
@@ -168,7 +168,7 @@ class VN100INS(INS):
 
     def __init_log(self):
         self.__time_log = []
-        self.__qternion_log = []
+        self.__quaternion_log = []
         self.__acceleration_log = []
         self.__angular_rate_log = []
         self.__magnetic_log = []
@@ -192,7 +192,7 @@ class VN100INS(INS):
             Exception('Couldn\'t save log during logging. Stop logging before save it.')
         np.savez(filename,
                  time = np.array(self.__time_log),
-                 qtn = np.array(self.__qternion_log),
+                 qtn = np.array(self.__quaternion_log),
                  acl = np.array(self.__acceleration_log),
                  ang = np.array(self.__angular_rate_log),
                  mag = np.array(self.__magnetic_log),
@@ -209,16 +209,11 @@ class VN100INS(INS):
         self.__time = data.timeStartup * 1e-9 - self.__time_offset
         if self.__time < pre_time:
             print("error: " + str(pre_time))
-        self.__quaternion[0], self.__quaternion[1], self.__quaternion[2] = \
-            data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w
-        self.__acceleration[0], self.__acceleration[1], self.__acceleration[2] = \
-            data.acceleration.c0, data.acceleration.c1, data.acceleration.c2
-        self.__angular_rate[0], self.__angular_rate[1], self.__angular_rate[2] = \
-            data.angularRate.c0, data.angularRate.c1, data.angularRate.c2
-        self.__magnetic[0], self.__magnetic[1], self.__magnetic[2] = \
-            data.magnetic.c0, data.magnetic.c1, data.magnetic.c2
-        self.__dv[0], self.__dv[1], self.__dv[2] = \
-            data.deltaVelocity.c0, data.deltaVelocity.c1, data.deltaVelocity.c2
+        self.__quaternion[0], self.__quaternion[1], self.__quaternion[2], self.__quaternion[3] = data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w
+        self.__acceleration[0], self.__acceleration[1], self.__acceleration[2] = data.acceleration.c0, data.acceleration.c1, data.acceleration.c2
+        self.__angular_rate[0], self.__angular_rate[1], self.__angular_rate[2] = data.angularRate.c0, data.angularRate.c1, data.angularRate.c2
+        self.__magnetic[0], self.__magnetic[1], self.__magnetic[2] = data.magnetic.c0, data.magnetic.c1, data.magnetic.c2
+        self.__dv[0], self.__dv[1], self.__dv[2] = data.deltaVelocity.c0, data.deltaVelocity.c1, data.deltaVelocity.c2
 
         dt = data.deltaTime
         pre_vel = list(self.__vel)
@@ -237,7 +232,7 @@ class VN100INS(INS):
 
         if self.__logging:
             self.__time_log.append(self.__time)
-            self.__qternion_log.append(list(self.__quaternion))
+            self.__quaternion_log.append(list(self.__quaternion))
             self.__acceleration_log.append(list(self.__acceleration))
             self.__angular_rate_log.append(list(self.__angular_rate))
             self.__magnetic_log.append(list(self.__magnetic))
@@ -246,13 +241,13 @@ class VN100INS(INS):
             self.__pos_log.append(list(self.__pos))
 
 
-    ZERO_VELOCITY_DETECTION_ANGULAR_RATE_X_MIN = -0.0012
-    ZERO_VELOCITY_DETECTION_ANGULAR_RATE_X_MAX =  0.0012
-    ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Y_MIN = -0.0012
-    ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Y_MAX =  0.0012
-    ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Z_MIN = -0.0016
-    ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Z_MAX =  0.0016
-    ZERO_VELOCITY_DETECTION_COUNT = 1
+    ZVD_ANGULAR_RATE_X_MIN = -0.0012
+    ZVD_ANGULAR_RATE_X_MAX =  0.0012
+    ZVD_ANGULAR_RATE_Y_MIN = -0.0012
+    ZVD_ANGULAR_RATE_Y_MAX =  0.0012
+    ZVD_ANGULAR_RATE_Z_MIN = -0.0016
+    ZVD_ANGULAR_RATE_Z_MAX =  0.0016
+    ZVD_COUNT = 1
 
     def __detect_zero_velocity(self):
         try:
@@ -260,17 +255,17 @@ class VN100INS(INS):
         except Exception as e:
             self.__zvd_cnt = 0
 
-        if self.ZERO_VELOCITY_DETECTION_ANGULAR_RATE_X_MIN < self.__angular_rate[0] and \
-           self.ZERO_VELOCITY_DETECTION_ANGULAR_RATE_X_MAX > self.__angular_rate[0] and \
-           self.ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Y_MIN < self.__angular_rate[1] and \
-           self.ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Y_MAX > self.__angular_rate[1] and \
-           self.ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Z_MIN < self.__angular_rate[2] and \
-           self.ZERO_VELOCITY_DETECTION_ANGULAR_RATE_Z_MAX > self.__angular_rate[2]:
+        if VN100INS.ZVD_ANGULAR_RATE_X_MIN < self.__angular_rate[0] and \
+           VN100INS.ZVD_ANGULAR_RATE_X_MAX > self.__angular_rate[0] and \
+           VN100INS.ZVD_ANGULAR_RATE_Y_MIN < self.__angular_rate[1] and \
+           VN100INS.ZVD_ANGULAR_RATE_Y_MAX > self.__angular_rate[1] and \
+           VN100INS.ZVD_ANGULAR_RATE_Z_MIN < self.__angular_rate[2] and \
+           VN100INS.ZVD_ANGULAR_RATE_Z_MAX > self.__angular_rate[2]:
             self.__zvd_cnt += 1
         else:
             self.__zvd_cnt = 0
 
-        if self.__zvd_cnt >= self.ZERO_VELOCITY_DETECTION_COUNT:
+        if self.__zvd_cnt >= VN100INS.ZVD_COUNT:
             return True
         else:
             return False

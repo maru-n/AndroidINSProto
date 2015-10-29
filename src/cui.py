@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 
 import sys
@@ -10,6 +9,7 @@ import select
 import tty
 import termios
 from datetime import datetime
+from threading import Timer
 
 
 class NonBlockingConsole(object):
@@ -24,14 +24,16 @@ class NonBlockingConsole(object):
 
 
     def get_data(self):
-        if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
-            return sys.stdin.read(1)
-        return False
+        #if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+        select.select([sys.stdin], [], [])
+        return sys.stdin.read(1)
+        #return False
 
 
 message = ''
+ins = None
 
-def __print_status(ins):
+def __print_status():
     global message
     clr_txt = '\033[1A\033[K' * message.count('\n')
     message = ''
@@ -59,13 +61,26 @@ def __print_status(ins):
         sys.stdout.flush()
 
 
-def start(ins):
-    sys.stdout.write('\nr: reset data   l: start/stop log   q,ESC: quit\n')
+running = False
+
+def __print_status_loop():
+    __print_status()
+    if running:
+        Timer(0.2, __print_status_loop).start()
+
+
+def start(_ins):
+    global ins
+    global running
+    running = True
+    ins = _ins
+    print('\nr: reset data   l: start/stop log   q,ESC: quit')
+    __print_status_loop()
     with NonBlockingConsole() as nbc:
         while True:
-
             key = nbc.get_data()
             if key in ['\x1b', 'q']:
+                running = False
                 break
             elif key in ['l']:
                 if ins.is_logging():
@@ -76,7 +91,3 @@ def start(ins):
                     ins.start_logging()
             elif key in ['r']:
                 ins.reset_data()
-
-            __print_status(ins)
-
-            time.sleep(0.1)

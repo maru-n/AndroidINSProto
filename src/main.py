@@ -45,7 +45,7 @@ def get_available_serial_devices():
     return result
 
 
-if __name__ == '__main__':
+def main():
     parser = OptionParser()
 
     parser.add_option("-w", "--web-ui",
@@ -80,9 +80,14 @@ if __name__ == '__main__':
         print("\033[31mError: \033[39m %s" % e)
         exit()
 
+    # ui.start() is blocking method. (todo fix).
     if opts.web_ui:
         web_ui.start(ins)
     else:
         cui.start(ins)
 
     ins.stop()
+
+
+if __name__ == '__main__':
+    main()

@@ -88,6 +88,7 @@ def main():
 
     ins.stop()
 
-
+#import cProfile
 if __name__ == '__main__':
+    #cProfile.run('main()', "profile.txt")
     main()

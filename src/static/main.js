@@ -134,8 +134,8 @@ function update_navigation_display(data) {
     var vel = data.velocity;
     var dv = data.delta_velocity;
     // pos is NED frame and display North->y, East->x, Down->z
-    var pos_north = pos[1];
-    var pos_east  = pos[0];
+    var pos_north = pos[0];
+    var pos_east  = pos[1];
     var radius = 0.02;
     var segments = 8;
 

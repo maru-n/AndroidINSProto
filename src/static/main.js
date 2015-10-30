@@ -48,7 +48,6 @@ function update_sensor_data_charts(data) {
         mag_data.removeRow(0);
     }
     mag_chart.draw(mag_data, xyz_chart_option);
-
 }
 
 
@@ -59,7 +58,9 @@ function init_attitude_display(element_id) {
     $target.empty();
     var renderSize = $target.width();
     scene = new THREE.Scene();
-
+    // convert to NED frame
+    scene.rotation.z = Math.PI/2;
+    scene.rotation.y = Math.PI;
     camera = new THREE.PerspectiveCamera( 75, 1, 1, 10000 );
     camera.position.z = 1000;
 
@@ -118,6 +119,9 @@ function init_navigation_display(element_id) {
             scene_p.add(line);
         }
     }
+    // convert to NED frame
+    scene_p.rotation.z = Math.PI/2;
+    scene_p.rotation.y = Math.PI;
 
     camera_p = new THREE.PerspectiveCamera( 45, width/height, 1, 10000 );
     camera_p.position.z = 5;
@@ -131,7 +135,7 @@ function init_navigation_display(element_id) {
     positionMarker = new THREE.Bone();
     var circle = new THREE.Line(
         new THREE.CircleGeometry( 0.1, 16 ),  // radius, segments
-        new THREE.LineBasicMaterial({linewidth:2, color:0x0000ff, thetaStart:Math.PI/2})
+        new THREE.LineBasicMaterial({linewidth:2, color:0x0000ff})
     );
     positionMarker.add(circle)
     /*
@@ -152,20 +156,23 @@ function update_navigation_display(data) {
     var pos = data.position;
     var vel = data.velocity;
     var dv = data.delta_velocity;
-    // pos is NED frame and display North->y, East->x, Down->z
-    var pos_north = pos[0];
-    var pos_east  = pos[1];
+
     var newTrackCircle = new THREE.Mesh(
         new THREE.CircleGeometry( 0.01, 8 ),
         new THREE.MeshBasicMaterial({color: 0x0099ff})
     );
-    newTrackCircle.position.x = pos_east;
-    newTrackCircle.position.y = pos_north;
-    //newTrackCircle.position.z = pos[2];
+    newTrackCircle.position.x = pos[0];
+    newTrackCircle.position.y = pos[1];
+    newTrackCircle.rotation.x = Math.PI;
     scene_p.add(newTrackCircle);
 
-    positionMarker.position.x = pos_east;
-    positionMarker.position.y = pos_north;
+    positionMarker.position.x = pos[0];
+    positionMarker.position.y = pos[1];
+    var qtn = data.quaternion;
+    var forwardVec = (new THREE.Vector3( 1, 0, 0 )).applyQuaternion(
+        new THREE.Quaternion(qtn[0], qtn[1], qtn[2], qtn[3])
+    );
+    positionMarker.rotation.z = Math.atan2(forwardVec.y, forwardVec.x);
 
     camera_p.position = newTrackCircle.position
     renderer_p.render(scene_p, camera_p);

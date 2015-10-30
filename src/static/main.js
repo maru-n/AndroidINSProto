@@ -127,7 +127,16 @@ function init_navigation_display(element_id) {
     renderer_p.setClearColor( 0xffffff );
 
     $target.append(renderer_p.domElement);
+
+    scene_p.add(positionMarker);
 }
+
+var trackCircleGeometry = new THREE.CircleGeometry( 0.01, 8 );
+var trackCircleMaterial = new THREE.MeshBasicMaterial({color: 0x0099ff});
+var positionMarker = new THREE.Mesh(
+    new THREE.CircleGeometry( 0.05, 8 ),
+    new THREE.MeshBasicMaterial({color: 0x0000ff})
+);
 
 function update_navigation_display(data) {
     var pos = data.position;
@@ -136,20 +145,16 @@ function update_navigation_display(data) {
     // pos is NED frame and display North->y, East->x, Down->z
     var pos_north = pos[0];
     var pos_east  = pos[1];
-    var radius = 0.02;
-    var segments = 8;
+    var newTrackCircle = new THREE.Mesh( trackCircleGeometry, trackCircleMaterial );
+    newTrackCircle.position.x = pos_east;
+    newTrackCircle.position.y = pos_north;
+    //newTrackCircle.position.z = pos[2];
+    scene_p.add(newTrackCircle);
 
-    var material = new THREE.MeshBasicMaterial({
-        color: 'blue'
-    });
-    var circleGeometry = new THREE.CircleGeometry( radius, segments );
-    var circle = new THREE.Mesh( circleGeometry, material );
-    circle.position.x = pos_east;
-    circle.position.y = pos_north;
-    //circle.position.z = pos[2];
-    scene_p.add(circle);
+    positionMarker.position.x = pos_east;
+    positionMarker.position.y = pos_north;
 
-    camera_p.position = circle.position
+    camera_p.position = newTrackCircle.position
     renderer_p.render(scene_p, camera_p);
 
     var data_html = "dvx:" + dv[0]  + " dvy:" + dv[1]  + " vz: " + dv[2]  + "<br/>" +

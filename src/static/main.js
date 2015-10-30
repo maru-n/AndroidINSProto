@@ -87,7 +87,7 @@ function update_attitude_display(data) {
     renderer.render(scene, camera);
 }
 
-var renderer_p, scene_p, camera_p;
+var renderer_p, scene_p, camera_p, positionMarker;
 var $data_string_area
 function init_navigation_display(element_id) {
     var $target = $('#'+element_id);
@@ -128,15 +128,25 @@ function init_navigation_display(element_id) {
 
     $target.append(renderer_p.domElement);
 
+    positionMarker = new THREE.Bone();
+    var circle = new THREE.Line(
+        new THREE.CircleGeometry( 0.1, 16 ),  // radius, segments
+        new THREE.LineBasicMaterial({linewidth:2, color:0x0000ff, thetaStart:Math.PI/2})
+    );
+    positionMarker.add(circle)
+    /*
+    var lineGeometry = new THREE.Geometry();
+    lineGeometry.vertices.push(new THREE.Vector3(0,0,0));
+    lineGeometry.vertices.push(new THREE.Vector3(0,0.13,0));
+    var redLine = new THREE.Line(
+        lineGeometry,
+        new THREE.LineBasicMaterial({linewidth:2, color:0xff0000})
+    );
+    positionMarker.add(redLine);
+    */
     scene_p.add(positionMarker);
 }
 
-var trackCircleGeometry = new THREE.CircleGeometry( 0.01, 8 );
-var trackCircleMaterial = new THREE.MeshBasicMaterial({color: 0x0099ff});
-var positionMarker = new THREE.Mesh(
-    new THREE.CircleGeometry( 0.05, 8 ),
-    new THREE.MeshBasicMaterial({color: 0x0000ff})
-);
 
 function update_navigation_display(data) {
     var pos = data.position;
@@ -145,7 +155,10 @@ function update_navigation_display(data) {
     // pos is NED frame and display North->y, East->x, Down->z
     var pos_north = pos[0];
     var pos_east  = pos[1];
-    var newTrackCircle = new THREE.Mesh( trackCircleGeometry, trackCircleMaterial );
+    var newTrackCircle = new THREE.Mesh(
+        new THREE.CircleGeometry( 0.01, 8 ),
+        new THREE.MeshBasicMaterial({color: 0x0099ff})
+    );
     newTrackCircle.position.x = pos_east;
     newTrackCircle.position.y = pos_north;
     //newTrackCircle.position.z = pos[2];

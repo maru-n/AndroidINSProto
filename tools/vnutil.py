@@ -25,12 +25,9 @@ def main():
             print("Failed to detect current baudrate. Please reset device.")
             return
         print("Detected baudrate: ", baudrate)
-        return
 
     command = args[1]
-
     commandArgs = args[2:]
-
     send_command(deviceName, baudrate, command, *commandArgs, printResult=True)
 
 
@@ -74,21 +71,22 @@ def send_command(deviceName, baudrate, command, *commandArgs, printResult=False)
         print("Command :", serialCommand, end="")
     send_serial_message(serialDevice, serialCommand)
 
-    correct_response = '$VN' + command
-    error_response = '$VNERR'
+    correct_response_prefix = '$VN' + command
+    error_response_prefix = '$VNERR'
     response = None
     successed = False
     start = clock()
     while (clock()-start) < COMMAND_RESPONSE_WAIT_TIME:
         try:
             l = serialDevice.readline().decode()
-            if l.count(correct_response):
+            if l.count(correct_response_prefix):
                 response = l
                 successed = True
                 break
-            elif l.count(error_response):
+            elif l.count(error_response_prefix):
                 response = l
                 successed = False
+                break
         except Exception as e:
             pass
 

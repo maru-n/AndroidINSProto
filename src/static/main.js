@@ -88,8 +88,11 @@ function update_attitude_display(data) {
     renderer.render(scene, camera);
 }
 
+var MAX_TRACK_CIRCLE_NUM = 12000
+var track_circles
 var renderer_p, scene_p, camera_p, positionMarker;
 var $data_string_area
+
 function init_navigation_display(element_id) {
     var $target = $('#'+element_id);
     $target.empty();
@@ -149,21 +152,27 @@ function init_navigation_display(element_id) {
     positionMarker.add(redLine);
     */
     scene_p.add(positionMarker);
-}
 
+    track_circles = [];
+}
 
 function update_navigation_display(data) {
     var pos = data.position;
     var vel = data.velocity;
     var dv = data.delta_velocity;
-
-    var newTrackCircle = new THREE.Mesh(
-        new THREE.CircleGeometry( 0.01, 8 ),
-        new THREE.MeshBasicMaterial({color: 0x0099ff})
-    );
+    var newTrackCircle;
+    if(track_circles.length < MAX_TRACK_CIRCLE_NUM) {
+        newTrackCircle = new THREE.Mesh(
+            new THREE.CircleGeometry( 0.01, 8 ),
+            new THREE.MeshBasicMaterial({color: 0x0099ff})
+        );
+    } else {
+        newTrackCircle = track_circles.shift();
+    }
     newTrackCircle.position.x = pos[0];
     newTrackCircle.position.y = pos[1];
     newTrackCircle.rotation.x = Math.PI;
+    track_circles.push(newTrackCircle);
     scene_p.add(newTrackCircle);
 
     positionMarker.position.x = pos[0];
@@ -174,7 +183,7 @@ function update_navigation_display(data) {
     );
     positionMarker.rotation.z = Math.atan2(forwardVec.y, forwardVec.x);
 
-    camera_p.position = newTrackCircle.position
+    camera_p.position = positionMarker.position
     renderer_p.render(scene_p, camera_p);
 
     var data_html = "dvx:" + dv[0]  + " dvy:" + dv[1]  + " vz: " + dv[2]  + "<br/>" +

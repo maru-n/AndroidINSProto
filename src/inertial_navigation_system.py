@@ -203,6 +203,10 @@ class VN100INS(INS):
 
 
     def __data_listener(self, sender, data):
+        self.__update(data)
+        
+
+    def __update(self, data):
         if self.__time_offset is None:
             self.__time_offset = data.timeStartup * 1e-9
         pre_time = self.__time

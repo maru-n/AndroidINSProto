@@ -7,6 +7,7 @@ from sys import platform
 import serial
 import glob
 from optparse import OptionParser
+import subprocess
 
 
 def choice_serial_device():
@@ -68,6 +69,11 @@ def main():
     else:
         serial_device = args[0]
 
+    lsof = subprocess.Popen(['lsof', serial_device], stdout=subprocess.DEVNULL).wait()
+    if lsof == 0:
+        print("\033[31mError: \033[39m devide %s is used by other process." % serial_device)
+        exit()
+
     if opts.device == 'vn100':
         ins = VN100INS(serial_device)
     elif opts.device == 'android':
@@ -80,13 +86,14 @@ def main():
         print("\033[31mError: \033[39m %s" % e)
         exit()
 
-    # ui.start() is blocking method. (todo fix).
+    # ui.start() is blocking method. (TODO: fix).
     if opts.web_ui:
         web_ui.start(ins)
     else:
         cui.start(ins)
 
     ins.stop()
+
 
 #import cProfile
 if __name__ == '__main__':

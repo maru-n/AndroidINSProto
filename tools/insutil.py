@@ -45,6 +45,7 @@ def set_indoor_heading_mode():
 
 def set_delta_theta_velocity_configuration():
     print("DeltaTheta and DeltaVelocity configuration... ", end="", flush=True)
+    #if vnutil.write_register(serial_device_name, baudrate, 82, 1, 0, 0, 0, 0):
     if vnutil.write_register(serial_device_name, baudrate, 82, 1, 1, 1, 0, 0):
         print("\033[32mOK\033[39m")
     else:

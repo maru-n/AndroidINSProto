@@ -118,7 +118,8 @@ class VN100INS(INS):
             4,
             BG1_TIME_STARTUP|BG1_DELTA_THETA|BG1_QTN,
             BG3_ACCEL|BG3_GYRO|BG3_MAG,
-            BG5_NONE,
+            BG5_LINEAR_ACCEL_NED,
+            #BG5_NONE,
             True)
         if err_code != VNERR_NO_ERROR:
             raise Exception('Failed to set binary output configuration. (Error code:%d)' % err_code)
@@ -204,24 +205,29 @@ class VN100INS(INS):
 
     def __data_listener(self, sender, data):
         self.__update(data)
-        
+
 
     def __update(self, data):
         if self.__time_offset is None:
             self.__time_offset = data.timeStartup * 1e-9
         pre_time = self.__time
         self.__time = data.timeStartup * 1e-9 - self.__time_offset
+        dt = self.__time - pre_time
         if self.__time < pre_time:
             print("error: " + str(pre_time))
+
         self.__quaternion[0], self.__quaternion[1], self.__quaternion[2], self.__quaternion[3] = data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w
         self.__acceleration[0], self.__acceleration[1], self.__acceleration[2] = data.acceleration.c0, data.acceleration.c1, data.acceleration.c2
         self.__angular_rate[0], self.__angular_rate[1], self.__angular_rate[2] = data.angularRate.c0, data.angularRate.c1, data.angularRate.c2
+        #self.__angular_rate[0], self.__angular_rate[1], self.__angular_rate[2] = data.linearAccelNed.c0, data.linearAccelNed.c1, data.linearAccelNed.c2
         self.__magnetic[0], self.__magnetic[1], self.__magnetic[2] = data.magnetic.c0, data.magnetic.c1, data.magnetic.c2
         self.__dv[0], self.__dv[1], self.__dv[2] = data.deltaVelocity.c0, data.deltaVelocity.c1, data.deltaVelocity.c2
+        #self.__dv[0], self.__dv[1], self.__dv[2] = data.linearAccelNed.c0*dt, data.linearAccelNed.c1*dt, data.linearAccelNed.c2*dt
 
-        dt = data.deltaTime
+        #dt = data.deltaTime
         pre_vel = list(self.__vel)
-        if self.__detect_zero_velocity():
+        #if self.__detect_zero_velocity():
+        if False:
             self.__vel[0] = 0.
             self.__vel[1] = 0.
             self.__vel[2] = 0.

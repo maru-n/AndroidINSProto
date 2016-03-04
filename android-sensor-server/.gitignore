@@ -5,3 +5,16 @@
 .DS_Store
 /build
 /captures
+
+.gradle/
+local.properties
+
+# IntelliJ IDEA project files
+.idea/
+*.ipr
+*.iml
+
+build/
+
+.DS_Store
+/captures
